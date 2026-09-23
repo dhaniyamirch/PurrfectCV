@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Visual Processing Editor</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+<style>
+:root {
+  --bg: #0d1117;
+  --panel: #161b22;
+  --panel-hover: #1f262e;
+  --line: #30363d;
+  --text: #c9d1d9;
+  --text-muted: #8b949e;
+  --accent: #2f81f7;
+  --accent-hover: #3182ce;
+  --danger: #f85149;
+  --success: #238636;
+  --card: #21262d;
+  --btn-bg: #21262d;
+  --btn-border: #363b42;
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+h1, h2, h3 { margin: 0; font-weight: 600; }
+button, input, select { font: inherit; outline: none; }
+button { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+
+.app-layout { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.top-bar { height: 50px; border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 16px; background: var(--panel); gap: 12px; flex-shrink: 0; z-index: 50; }
+.top-bar h1 { font-size: 15px; color: #fff; margin-right: auto; }
+
+.main-area { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+.side-panel { width: 300px; background: var(--panel); display: flex; flex-direction: column; border-right: 1px solid var(--line); flex-shrink: 0; overflow-y: hidden; z-index: 10; }
+.side-panel.right { border-right: none; border-left: 1px solid var(--line); width: 320px; overflow-y: auto; }
+.center-area { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg); overflow: hidden; }
+.bottom-area { display: flex; flex-direction: column; border-top: 1px solid var(--line); background: var(--panel); flex-shrink: 0; }
+
+.viewer-toolbar { height: 44px; background: var(--panel); border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0; position: relative; z-index: 20; }
+.viewer-container { flex: 1; min-height: 0; min-width: 0; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; background: #090c10; z-index: 10; cursor: crosshair; }
+.canvas-wrapper { position: relative; display: flex; align-items: center; justify-content: center; overflow: visible; transform-origin: top left; }
+canvas#mainCanvas { max-width: none; max-height: none; box-shadow: 0 4px 24px rgba(0,0,0,0.4); border: 1px solid #30363d; background: #000; display: block; }
+.overlay-canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+
+/* Split Handle */
+.split-handle { position: absolute; top: 0; bottom: 0; width: 4px; background: var(--accent); cursor: ew-resize; z-index: 30; margin-left: -2px; display: none; }
+.split-handle::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 16px; height: 16px; background: var(--accent); border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+
+.pipeline-area { border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 16px; gap: 16px; overflow-x: auto; height: 140px; background: #090c10; flex-shrink: 0; }
+.timeline-area { height: 130px; display: flex; flex-direction: column; padding: 8px 16px; overflow-x: auto; background: var(--panel); flex-shrink: 0; }
+
+.btn { background: var(--btn-bg); color: var(--text); border: 1px solid var(--btn-border); border-radius: 6px; padding: 6px 12px; font-size: 13px; transition: all 0.2s; white-space: nowrap; }
+.btn:hover:not(:disabled) { background: var(--panel-hover); border-color: #8b949e; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.primary { background: var(--success); border-color: rgba(240,246,252,0.1); color: #fff; }
+.btn-group { display: flex; border-radius: 6px; overflow: hidden; border: 1px solid var(--btn-border); }
+.btn-group .btn { border: none; border-radius: 0; border-right: 1px solid var(--btn-border); }
+.btn-group .btn:last-child { border-right: none; }
+.btn-group .btn.active { background: var(--accent); color: #fff; }
+
+.tools-container { overflow-y: auto; flex: 1; padding: 12px; }
+.category-header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 16px 0 8px 0; user-select: none; }
+.category-header:first-child { margin-top: 0; }
+.tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tool-btn { background: var(--card); border: 1px solid var(--btn-border); border-radius: 4px; padding: 6px 8px; font-size: 11px; text-align: left; color: var(--text); transition: all 0.1s; display: flex; align-items: center; justify-content: space-between; }
+.tool-btn:hover { border-color: var(--accent); background: #1f2937; }
+
+.control-group { margin-bottom: 12px; }
+.control-group label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; color: var(--text); align-items: center; }
+.control-group input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; height: 4px; border-radius: 2px; appearance: none; background: #30363d; }
+.control-group select { width: 100%; background: var(--bg); border: 1px solid var(--btn-border); color: var(--text); padding: 6px; border-radius: 4px; font-size: 12px; }
+
+.file-drop { border: 1px dashed var(--btn-border); border-radius: 6px; padding: 12px; text-align: center; margin-bottom: 12px; background: var(--bg); transition: border-color 0.2s; cursor: pointer; }
+.file-drop:hover { border-color: var(--accent); }
+.file-drop input { display: none; }
+.file-drop label { cursor: pointer; color: var(--accent); font-size: 13px; font-weight: 500; display: block; width: 100%; }
+
+/* Pipeline Blocks */
+.pipeline-track { display: flex; align-items: center; gap: 12px; min-width: max-content; }
+.pipe-block { background: var(--card); border: 1px solid var(--btn-border); border-radius: 8px; width: 140px; padding: 10px; display: flex; flex-direction: column; cursor: grab; position: relative; user-select: none; transition: transform 0.1s, border-color 0.1s; }
+.pipe-block.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); background: #162032; }
+.pipe-block:active { cursor: grabbing; }
+.pipe-block.drag-over { border-left: 3px solid var(--accent); }
+.pipe-block-header { font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+.pipe-block-del { color: var(--text-muted); background: none; border: none; padding: 2px; border-radius: 4px; font-size: 12px; }
+.pipe-block-del:hover { color: var(--danger); }
+.pipe-block-desc { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pipe-arrow { color: var(--text-muted); font-size: 16px; }
+
+/* Timeline & Stats */
+.timeline-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; }
+.timeline-track { display: flex; gap: 4px; overflow-x: auto; flex: 1; padding-bottom: 4px; align-items: center; }
+.frame-thumb { width: 70px; height: 50px; flex-shrink: 0; border: 2px solid transparent; border-radius: 4px; background: #000; cursor: pointer; position: relative; overflow: hidden; }
+.frame-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.frame-thumb.active { border-color: var(--accent); }
+.frame-thumb .frame-idx { position: absolute; bottom: 2px; right: 2px; font-size: 9px; background: rgba(0,0,0,0.8); padding: 1px 3px; border-radius: 2px; color: #fff; }
+
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.stat-box { background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--line); text-align: center; }
+.stat-val { font-size: 14px; color: #fff; font-weight: 600; display: block; }
+.stat-lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; }
+canvas#histCanvas { width: 100%; height: 100px; background: #090c10; border: 1px solid var(--line); border-radius: 6px; margin-top: 8px; }
+
+.loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(9, 12, 16, 0.7); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(2px); color: #fff; font-size: 14px; flex-direction: column; gap: 12px; }
+.loading-overlay.global { position: fixed; z-index: 9999; display: flex; background: var(--bg); }
+.spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#msgBox { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-50px); background: #1f2937; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; opacity: 0; transition: all 0.3s; z-index: 9999; border: 1px solid var(--line); }
+#msgBox.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+</style>
+</head>
+<body>
+
+<!-- Global OpenCV Loading Screen -->
+<div class="loading-overlay global" id="cvLoading">
+  <div class="spinner" style="width: 50px; height: 50px; border-width: 4px;"></div>
+  <div style="font-size: 16px; margin-top: 16px;">Initializing OpenCV.js Engine...</div>
+  <div style="font-size: 12px; color: var(--text-muted);">Downloading WebAssembly binaries (~8MB)</div>
+</div>
+
+<div class="app-layout">
+  <div class="top-bar">
+    <h1>Visual Processing Editor (OpenCV.js)</h1>
+    <div style="width: 1px; height: 20px; background: var(--line); margin: 0 8px;"></div>
+    <div style="font-size: 12px; color: var(--text-muted);" id="statusText">Awaiting OpenCV...</div>
+    <div style="flex: 1;"></div>
+    <button class="btn" id="btnUndo" disabled>↺ Undo</button>
+    <button class="btn" id="btnRedo" disabled>↻ Redo</button>
+    <div style="width: 1px; height: 20px; background: var(--line); margin: 0 8px;"></div>
+    <button class="btn" id="btnLoadPipe">📂 Load Pipeline</button>
+    <button class="btn" id="btnSavePipe">💾 Save Pipeline</button>
+    <button class="btn" id="btnClearPipe">🗑 Clear</button>
+    <div style="width: 1px; height: 20px; background: var(--line); margin: 0 8px;"></div>
+    <button class="btn primary" id="btnSaveImg">⬇ Save Frame</button>
+    <button class="btn primary" id="btnExportAll" style="display:none;">⬇ Export All Frames</button>
+  </div>
+
+  <div class="main-area">
+    <div class="side-panel">
+      <div style="padding: 12px; border-bottom: 1px solid var(--line);">
+        <div class="file-drop">
+          <label for="mediaUpload">
+            <span style="font-size: 18px; display:block; margin-bottom:4px;">📁</span> 
+            Open Media (Image/Video)
+          </label>
+          <input type="file" id="mediaUpload" accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime" />
+        </div>
+      </div>
+      <div class="tools-container" id="toolsContainer">
+        <!-- Tools injected via JS -->
+      </div>
+    </div>
+
+    <div class="center-area">
+      <div class="viewer-toolbar">
+        <div class="btn-group">
+          <button class="btn active" data-view="processed">Processed</button>
+          <button class="btn" data-view="original">Original</button>
+          <button class="btn" data-view="split">Side-by-side</button>
+        </div>
+        <div style="flex:1;"></div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-right: 12px;">Right-click & drag to pan</div>
+        <button class="btn" id="btnFit">Zoom 1:1</button>
+        <button class="btn" id="btnZoomIn">➕</button>
+        <button class="btn" id="btnZoomOut">➖</button>
+      </div>
+      <div class="viewer-container" id="viewerContainer">
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="mainCanvas"></canvas>
+          <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
+          <div class="split-handle" id="splitHandle"></div>
+        </div>
+        <div class="loading-overlay" id="renderOverlay">
+          <div class="spinner"></div>
+          <div id="renderText">Processing Pipeline...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-panel right">
+      <div style="padding: 16px; border-bottom: 1px solid var(--line); flex: 1;" id="inspectorPanel">
+        <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 12px;">BLOCK INSPECTOR</div>
+        <div id="inspectorContent" style="color: var(--text-muted); font-size: 12px; text-align: center; padding: 20px 0; line-height: 1.5;">
+          Select a block in the processing pipeline below to edit its parameters.
+        </div>
+      </div>
+      <div style="padding: 16px;">
+        <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">STATISTICS</div>
+        <canvas id="histCanvas"></canvas>
+        <div class="stat-grid">
+          <div class="stat-box"><span class="stat-val" id="statMean">-</span><span class="stat-lbl">Mean</span></div>
+          <div class="stat-box"><span class="stat-val" id="statStd">-</span><span class="stat-lbl">Std Dev</span></div>
+          <div class="stat-box"><span class="stat-val" id="statMin">-</span><span class="stat-lbl">Min</span></div>
+          <div class="stat-box"><span class="stat-val" id="statMax">-</span><span class="stat-lbl">Max</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-area">
+    <div class="pipeline-area" id="pipelineArea"></div>
+    <div class="timeline-area">
+      <div class="timeline-header">
+        <div style="display:flex; align-items: center; gap: 12px;">
+          <span style="font-weight: 600;">Video Timeline</span>
+          <span id="timelineStatus" style="color:var(--text-muted); font-size: 11px;"></span>
+        </div>
+        <div style="display:flex; gap: 8px; align-items: center;">
+          <button class="btn btn-small" id="btnPrevFrame">◀</button>
+          <span id="frameCounter" style="font-size: 11px; font-variant-numeric: tabular-nums; width: 60px; text-align: center;">0 / 0</span>
+          <button class="btn btn-small" id="btnNextFrame">▶</button>
+          <div style="border-left: 1px solid var(--line); height: 16px; margin: 0 4px;"></div>
+          <button class="btn btn-small" id="btnBrightest">Find Brightest</button>
+          <button class="btn btn-small" id="btnDarkest">Find Darkest</button>
+          <div style="border-left: 1px solid var(--line); height: 16px; margin: 0 4px;"></div>
+          <label style="font-size:11px; display:flex; align-items:center; gap:6px;">
+            Extract FPS: 
+            <input type="number" id="fpsExtract" value="5" min="1" max="30" style="width:40px; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:4px; padding:4px; text-align:center;">
+          </label>
+        </div>
+      </div>
+      <div class="timeline-track" id="timelineTrack">
+        <div style="color: var(--text-muted); font-size: 12px; align-self: center; padding-left: 8px; font-style: italic;">
+          No video loaded. Upload a video to extract frames.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="pipeUpload" accept=".json" style="display:none;" />
+<div id="msgBox">Message</div>
+
+<script>
+let cvReady = false;
+
+// Global state
+let state = {
+  mediaType: null, fileName: '', sourceImage: null, videoEl: null, frames: [], currentFrameIndex: 0,
+  pipeline: [], selectedBlockId: null,
+  viewMode: 'processed', zoomLevel: 1.0, panX: 0, panY: 0, splitPosition: 0.5,
+  lastOrigData: null, lastProcData: null
+};
+
+// Architecture: Operation Dictionary utilizing OpenCV.js functions where possible
+const OPERATIONS_CONFIG = [
+  {
+    category: 'BASIC',
+    tools: {
+      grayscale: { name: 'Grayscale', params: [] },
+      invert: { name: 'Invert', params: [] },
+      brightContrast: { name: 'Brightness/Contrast', params: [
+        { id: 'brightness', label: 'Brightness', type: 'range', min: -100, max: 100, step: 1, default: 0 },
+        { id: 'contrast', label: 'Contrast', type: 'range', min: 0.1, max: 3, step: 0.05, default: 1 }
+      ]},
+      gamma: { name: 'Gamma Correction', params: [
+        { id: 'gamma', label: 'Gamma', type: 'range', min: 0.1, max: 5.0, step: 0.1, default: 1.0 }
+      ]}
+    }
+  },
+  {
+    category: 'HISTOGRAM',
+    tools: {
+      histEq: { name: 'Histogram Eq.', params: [] },
+      clahe: { name: 'CLAHE', params: [
+        { id: 'clipLimit', label: 'Clip Limit', type: 'range', min: 0.5, max: 10, step: 0.5, default: 2.0 },
+        { id: 'tileSize', label: 'Tile Grid Size', type: 'range', min: 2, max: 32, step: 1, default: 8 }
+      ]}
+    }
+  },
+  {
+    category: 'FILTERS',
+    tools: {
+      gaussianBlur: { name: 'Gaussian Blur', params: [
+        { id: 'kernel', label: 'Kernel Size', type: 'range', min: 3, max: 31, step: 2, default: 5 },
+        { id: 'sigma', label: 'Sigma X', type: 'range', min: 0, max: 10, step: 0.1, default: 0 }
+      ]},
+      medianBlur: { name: 'Median Blur', params: [
+        { id: 'kernel', label: 'Kernel Size', type: 'range', min: 3, max: 31, step: 2, default: 5 }
+      ]},
+      sharpen: { name: 'Sharpen (Laplacian)', params: [
+        { id: 'amount', label: 'Amount', type: 'range', min: 0.1, max: 5, step: 0.1, default: 1.0 }
+      ]}
+    }
+  },
+  {
+    category: 'EDGES',
+    tools: {
+      sobel: { name: 'Sobel Filter', params: [
+        { id: 'dx', label: 'Derivative X', type: 'range', min: 0, max: 2, step: 1, default: 1 },
+        { id: 'dy', label: 'Derivative Y', type: 'range', min: 0, max: 2, step: 1, default: 1 },
+        { id: 'ksize', label: 'Kernel Size', type: 'range', min: 1, max: 7, step: 2, default: 3 }
+      ]},
+      canny: { name: 'Canny Edge', params: [
+        { id: 't1', label: 'Threshold 1', type: 'range', min: 0, max: 255, step: 1, default: 50 },
+        { id: 't2', label: 'Threshold 2', type: 'range', min: 0, max: 255, step: 1, default: 150 }
+      ]}
+    }
+  },
+  {
+    category: 'MORPHOLOGY',
+    tools: {
+      morphology: { name: 'Morphology', params: [
+        { id: 'op', label: 'Operation', type: 'select', options: ['Erode', 'Dilate', 'Open', 'Close', 'Gradient', 'Top Hat', 'Black Hat'], default: 'Open' },
+        { id: 'shape', label: 'Kernel Shape', type: 'select', options: ['Rect', 'Cross', 'Ellipse'], default: 'Rect' },
+        { id: 'ksize', label: 'Kernel Size', type: 'range', min: 3, max: 21, step: 2, default: 3 },
+        { id: 'iters', label: 'Iterations', type: 'range', min: 1, max: 10, step: 1, default: 1 }
+      ]}
+    }
+  },
+  {
+    category: 'SEGMENTATION',
+    tools: {
+      threshold: { name: 'Threshold', params: [
+        { id: 'type', label: 'Type', type: 'select', options: ['Binary', 'Binary Inv', 'Trunc', 'ToZero', 'ToZero Inv', 'Otsu'], default: 'Binary' },
+        { id: 'level', label: 'Level', type: 'range', min: 0, max: 255, step: 1, default: 128 }
+      ]},
+      distTransform: { name: 'Distance Transform', params: [] },
+      connectedComps: { name: 'Connected Comps', params: [] },
+      watershed: { name: 'Watershed', params: [] }
+    }
+  },
+  {
+    category: 'CONTOURS',
+    tools: {
+      findContours: { name: 'Find Contours', params: [
+        { id: 'thickness', label: 'Thickness', type: 'range', min: -1, max: 5, step: 1, default: 1 }
+      ]}
+    }
+  },
+  {
+    category: 'FREQUENCY & WAVELETS',
+    tools: {
+      fftMag: { name: 'FFT Magnitude', params: [] }
+    }
+  }
+];
+
+const OPERATIONS = {};
+OPERATIONS_CONFIG.forEach(cat => Object.assign(OPERATIONS, cat.tools));
+
+let historyPast = [];
+let historyFuture = [];
+let isExtracting = false;
+let extractionAbort = new AbortController();
+
+const els = {
+  canvas: document.getElementById('mainCanvas'),
+  ctx: document.getElementById('mainCanvas').getContext('2d', { willReadFrequently: true }),
+  overlayCanvas: document.getElementById('overlayCanvas'),
+  oCtx: document.getElementById('overlayCanvas').getContext('2d'),
+  splitHandle: document.getElementById('splitHandle'),
+  histCanvas: document.getElementById('histCanvas'),
+  hctx: document.getElementById('histCanvas').getContext('2d'),
+  pipeArea: document.getElementById('pipelineArea'),
+  inspector: document.getElementById('inspectorContent'),
+  timeline: document.getElementById('timelineTrack'),
+  toolsContainer: document.getElementById('toolsContainer'),
+  renderOverlay: document.getElementById('renderOverlay'),
+  canvasWrapper: document.getElementById('canvasWrapper'),
+  viewerContainer: document.getElementById('viewerContainer')
+};
+
+const workCanvas = document.createElement('canvas');
+const workCtx = workCanvas.getContext('2d', { willReadFrequently: true });
+const resultCanvas = document.createElement('canvas');
+const resultCtx = resultCanvas.getContext('2d', { willReadFrequently: true });
+let isProcessing = false, renderRequested = false;
+
+function onOpenCvReady() {
+  cv['onRuntimeInitialized'] = () => {
+    cvReady = true;
+    document.getElementById('cvLoading').style.display = 'none';
+    showMsg('OpenCV.js Engine Ready');
+    requestProcess();
+  };
+}
+
+const showMsg = (msg) => {
+  const t = document.getElementById('msgBox');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+};
+const setStatus = (msg) => document.getElementById('statusText').textContent = msg;
+const generateId = () => Math.random().toString(36).substr(2, 9);
+const clonePipeline = (pipe) => JSON.parse(JSON.stringify(pipe));
+const clamp = (v) => Math.max(0, Math.min(255, v));
+const luma = (r, g, b) => 0.299*r + 0.587*g + 0.114*b;
+
+function initTools() {
+  els.toolsContainer.innerHTML = '';
+  OPERATIONS_CONFIG.forEach(cat => {
+    const head = document.createElement('div');
+    head.className = 'category-header';
+    head.textContent = cat.category;
+    els.toolsContainer.appendChild(head);
+    
+    const grid = document.createElement('div');
+    grid.className = 'tools-grid';
+    
+    for (const [type, def] of Object.entries(cat.tools)) {
+      const btn = document.createElement('button');
+      btn.className = 'tool-btn';
+      btn.textContent = def.name;
+      btn.onclick = () => addBlock(type);
+      grid.appendChild(btn);
+    }
+    els.toolsContainer.appendChild(grid);
+  });
+}
+
+function saveHistory() {
+  historyPast.push(clonePipeline(state.pipeline));
+  if (historyPast.length > 50) historyPast.shift();
+  historyFuture = [];
+  updateUndoRedoUI();
+}
+
+function updateUndoRedoUI() {
+  document.getElementById('btnUndo').disabled = historyPast.length === 0;
+  document.getElementById('btnRedo').disabled = historyFuture.length === 0;
+}
+
+function undo() {
+  if (historyPast.length === 0) return;
+  historyFuture.push(clonePipeline(state.pipeline));
+  state.pipeline = historyPast.pop();
+  state.selectedBlockId = null;
+  updateUndoRedoUI(); renderPipelineUI(); requestProcess();
+}
+
+function redo() {
+  if (historyFuture.length === 0) return;
+  historyPast.push(clonePipeline(state.pipeline));
+  state.pipeline = historyFuture.pop();
+  state.selectedBlockId = null;
+  updateUndoRedoUI(); renderPipelineUI(); requestProcess();
+}
+
+function addBlock(type) {
+  saveHistory();
+  const def = OPERATIONS[type];
+  const params = {};
+  def.params.forEach(p => params[p.id] = p.default);
+  const block = { id: generateId(), type, params };
+  state.pipeline.push(block);
+  state.selectedBlockId = block.id;
+  renderPipelineUI();
+  requestProcess();
+}
+
+function deleteBlock(id) {
+  saveHistory();
+  state.pipeline = state.pipeline.filter(b => b.id !== id);
+  if (state.selectedBlockId === id) state.selectedBlockId = null;
+  renderPipelineUI();
+  requestProcess();
+}
+
+function renderPipelineUI() {
+  els.pipeArea.innerHTML = '';
+  if (state.pipeline.length === 0) {
+    els.pipeArea.innerHTML = '<div style="color:var(--text-muted);font-size:12px;font-style:italic;">Processing pipeline is empty. Click tools on the left to build.</div>';
+    renderInspector();
+    return;
+  }
+  
+  const track = document.createElement('div');
+  track.className = 'pipeline-track';
+  
+  const orig = document.createElement('div');
+  orig.className = 'pipe-block';
+  orig.style.background = '#0d1117'; orig.style.cursor = 'default'; orig.style.borderColor = '#21262d';
+  orig.innerHTML = `<div class="pipe-block-header">Source</div><div class="pipe-block-desc">Base Image/Frame</div>`;
+  track.appendChild(orig);
+  
+  let draggedIndex = null;
+
+  state.pipeline.forEach((block, idx) => {
+    const arrow = document.createElement('div');
+    arrow.className = 'pipe-arrow'; arrow.textContent = '→';
+    track.appendChild(arrow);
+    
+    const def = OPERATIONS[block.type];
+    const el = document.createElement('div');
+    el.className = 'pipe-block' + (state.selectedBlockId === block.id ? ' selected' : '');
+    el.draggable = true;
+    
+    const header = document.createElement('div');
+    header.className = 'pipe-block-header';
+    header.innerHTML = `<span>${def.name}</span>`;
+    
+    const delBtn = document.createElement('button');
+    delBtn.className = 'pipe-block-del'; delBtn.innerHTML = '✕'; delBtn.title = 'Delete';
+    delBtn.onclick = (e) => { e.stopPropagation(); deleteBlock(block.id); };
+    header.appendChild(delBtn);
+    
+    const desc = document.createElement('div');
+    desc.className = 'pipe-block-desc';
+    let paramSummary = def.params.map(p => {
+      let val = block.params[p.id];
+      if (typeof val === 'number') val = (val % 1 === 0) ? val : val.toFixed(2);
+      return `${p.label.split(' ')[0]}: ${val}`;
+    }).join(', ');
+    desc.textContent = paramSummary || 'Active';
+    
+    el.appendChild(header); el.appendChild(desc);
+    
+    el.ondragstart = (e) => {
+      draggedIndex = idx; e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => el.style.opacity = '0.4', 0);
+    };
+    el.ondragend = () => {
+      el.style.opacity = '1';
+      document.querySelectorAll('.pipe-block').forEach(b => b.classList.remove('drag-over'));
+    };
+    el.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; el.classList.add('drag-over'); };
+    el.ondragleave = () => { el.classList.remove('drag-over'); };
+    el.ondrop = (e) => {
+      e.preventDefault(); el.classList.remove('drag-over');
+      if (draggedIndex === null || draggedIndex === idx) return;
+      saveHistory();
+      const item = state.pipeline.splice(draggedIndex, 1)[0];
+      state.pipeline.splice(idx, 0, item);
+      renderPipelineUI(); requestProcess();
+    };
+    el.onclick = () => { state.selectedBlockId = block.id; renderPipelineUI(); };
+    track.appendChild(el);
+  });
+  
+  els.pipeArea.appendChild(track);
+  setTimeout(() => els.pipeArea.scrollLeft = els.pipeArea.scrollWidth, 10);
+  renderInspector();
+}
+
+function renderInspector() {
+  els.inspector.innerHTML = '';
+  if (!state.selectedBlockId) {
+    els.inspector.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px 0;line-height:1.5;">Select a block in the processing pipeline below to edit its parameters.</div>';
+    return;
+  }
+  const block = state.pipeline.find(b => b.id === state.selectedBlockId);
+  if (!block) return;
+  const def = OPERATIONS[block.type];
+  
+  const title = document.createElement('h3');
+  title.style.color = '#fff'; title.style.marginBottom = '16px'; title.style.fontSize = '14px';
+  title.textContent = def.name;
+  els.inspector.appendChild(title);
+  
+  if (def.params.length === 0) {
+    els.inspector.innerHTML += '<div style="color:var(--text-muted);font-size:12px;">No configurable parameters for this operation.<br><br><i>OpenCV Engine processing mode active.</i></div>';
+    return;
+  }
+  
+  def.params.forEach(p => {
+    const group = document.createElement('div');
+    group.className = 'control-group';
+    const label = document.createElement('label');
+    const valSpan = document.createElement('span');
+    valSpan.style.color = 'var(--accent)';
+    valSpan.style.fontWeight = '600';
+    
+    let currentVal = block.params[p.id];
+    valSpan.textContent = (typeof currentVal === 'number' && currentVal % 1 !== 0) ? currentVal.toFixed(2) : currentVal;
+    
+    label.textContent = p.label;
+    label.appendChild(valSpan);
+    group.appendChild(label);
+    
+    if (p.type === 'range') {
+      const input = document.createElement('input');
+      input.type = 'range'; input.min = p.min; input.max = p.max; input.step = p.step;
+      input.value = block.params[p.id];
+      
+      input.oninput = (e) => {
+        let v = parseFloat(e.target.value);
+        block.params[p.id] = v;
+        valSpan.textContent = (v % 1 !== 0) ? v.toFixed(2) : v;
+        clearTimeout(input.processTimeout);
+        input.processTimeout = setTimeout(() => { renderPipelineUI(); requestProcess(); }, 150);
+      };
+      input.onchange = (e) => { saveHistory(); };
+      group.appendChild(input);
+    } else if (p.type === 'select') {
+      const sel = document.createElement('select');
+      p.options.forEach(opt => {
+        const o = document.createElement('option'); o.value = opt; o.textContent = opt;
+        if (block.params[p.id] === opt) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.onchange = (e) => { saveHistory(); block.params[p.id] = e.target.value; renderPipelineUI(); requestProcess(); };
+      group.appendChild(sel);
+    }
+    els.inspector.appendChild(group);
+  });
+}
+
+document.getElementById('mediaUpload').addEventListener('change', async (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  state.fileName = file.name;
+  extractionAbort.abort();
+  extractionAbort = new AbortController();
+
+  if (file.type.startsWith('video/')) {
+    await loadVideo(file);
+  } else if (file.type.startsWith('image/')) {
+    await loadImage(file);
+  } else {
+    showMsg('Unsupported file format.');
+  }
+  e.target.value = '';
+});
+
+async function loadImage(file) {
+  state.mediaType = 'image'; state.frames = []; 
+  document.getElementById('btnExportAll').style.display = 'none';
+  const img = new Image();
+  img.onload = () => {
+    state.sourceImage = img;
+    setStatus(`Image: ${img.naturalWidth}x${img.naturalHeight}`);
+    document.getElementById('btnFit').click();
+    renderTimeline(); requestProcess();
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+async function loadVideo(file) {
+  state.mediaType = 'video';
+  document.getElementById('btnExportAll').style.display = 'inline-flex';
+  if (state.videoEl) { state.videoEl.pause(); state.videoEl.removeAttribute('src'); }
+  
+  const video = document.createElement('video');
+  video.src = URL.createObjectURL(file);
+  video.muted = true; video.playsInline = true;
+  state.videoEl = video;
+  
+  setStatus('Loading video metadata...');
+  await new Promise((resolve, reject) => { video.onloadedmetadata = resolve; video.onerror = reject; }).catch(() => { showMsg('Error loading video format.'); });
+  
+  if (!video.duration || video.duration === Infinity) { showMsg('Error: Cannot determine video duration.'); return; }
+  setStatus(`Video: ${video.videoWidth}x${video.videoHeight}, Duration: ${video.duration.toFixed(2)}s`);
+  extractFrames(extractionAbort.signal);
+}
+
+async function seekVideo(v, t) {
+  return new Promise(resolve => {
+    const done = () => { v.removeEventListener('seeked', done); resolve(); };
+    v.addEventListener('seeked', done, {once: true});
+    v.currentTime = Math.min(Math.max(0, t), v.duration - 0.001);
+  });
+}
+
+async function extractFrames(signal) {
+  const v = state.videoEl;
+  let fps = parseFloat(document.getElementById('fpsExtract').value) || 5;
+  fps = Math.max(1, Math.min(30, fps)); 
+  const totalDuration = v.duration;
+  let t = 0; state.frames = []; els.timeline.innerHTML = '';
+  
+  const thumbW = 140;
+  const thumbH = Math.max(1, Math.round(v.videoHeight * (thumbW / v.videoWidth)));
+  const c = document.createElement('canvas'); c.width = thumbW; c.height = thumbH;
+  const cx = c.getContext('2d', {willReadFrequently: true});
+  
+  setStatus('Extracting frames...');
+  document.getElementById('timelineStatus').textContent = '(Extracting...)';
+  let frameIdx = 0; const maxFrames = 300; 
+  
+  while (t <= totalDuration && frameIdx < maxFrames && !signal.aborted) {
+    await seekVideo(v, t);
+    cx.drawImage(v, 0, 0, thumbW, thumbH);
+    const dataUrl = c.toDataURL('image/jpeg', 0.6);
+    state.frames.push({ time: t, url: dataUrl });
+    
+    const thumb = document.createElement('div');
+    thumb.className = 'frame-thumb' + (frameIdx === 0 ? ' active' : '');
+    thumb.innerHTML = `<img src="${dataUrl}"/><div class="frame-idx">F${frameIdx}</div>`;
+    const currIdx = frameIdx;
+    thumb.onclick = () => selectFrame(currIdx);
+    els.timeline.appendChild(thumb);
+    
+    t += 1 / fps; frameIdx++;
+    if (frameIdx % 10 === 0) setStatus(`Extracted ${frameIdx} frames...`);
+  }
+  if (signal.aborted) return;
+  state.currentFrameIndex = 0;
+  document.getElementById('btnFit').click();
+  updateTimelineUI(); setStatus(`Ready. Extracted ${state.frames.length} frames.`); requestProcess();
+}
+
+function renderTimeline() {
+  els.timeline.innerHTML = '';
+  if (state.mediaType === 'image') {
+    els.timeline.innerHTML = '<div style="color:var(--text-muted);font-size:12px;align-self:center;padding-left:8px;font-style:italic;">Static image loaded. Timeline is disabled.</div>';
+    document.getElementById('timelineStatus').textContent = '';
+    document.getElementById('frameCounter').textContent = '0 / 0';
+  }
+}
+
+function updateTimelineUI() {
+  document.getElementById('timelineStatus').textContent = `${state.frames.length} frames`;
+  document.getElementById('frameCounter').textContent = `${state.currentFrameIndex} / ${Math.max(0, state.frames.length - 1)}`;
+  const thumbs = els.timeline.querySelectorAll('.frame-thumb');
+  thumbs.forEach((el, i) => {
+    if (i === state.currentFrameIndex) {
+      el.classList.add('active'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    } else el.classList.remove('active');
+  });
+}
+
+async function selectFrame(idx) {
+  if (state.mediaType !== 'video' || !state.frames[idx]) return;
+  state.currentFrameIndex = Math.max(0, Math.min(state.frames.length - 1, idx));
+  updateTimelineUI(); await requestProcess();
+}
+
+async function requestProcess() {
+  if (!cvReady) return;
+  if (isProcessing) { renderRequested = true; return; }
+  isProcessing = true; els.renderOverlay.style.display = 'flex';
+  
+  setTimeout(async () => {
+    try { await performProcess(); } 
+    catch(e) { console.error(e); showMsg("Error during processing."); } 
+    finally {
+      isProcessing = false; els.renderOverlay.style.display = 'none';
+      if (renderRequested) { renderRequested = false; requestProcess(); }
+    }
+  }, 10);
+}
+
+async function getSourceData() {
+  if (state.mediaType === 'image' && state.sourceImage) {
+    workCanvas.width = state.sourceImage.naturalWidth; workCanvas.height = state.sourceImage.naturalHeight;
+    workCtx.drawImage(state.sourceImage, 0, 0); return workCtx.getImageData(0, 0, workCanvas.width, workCanvas.height);
+  } else if (state.mediaType === 'video' && state.frames[state.currentFrameIndex]) {
+    await seekVideo(state.videoEl, state.frames[state.currentFrameIndex].time);
+    workCanvas.width = state.videoEl.videoWidth; workCanvas.height = state.videoEl.videoHeight;
+    workCtx.drawImage(state.videoEl, 0, 0); return workCtx.getImageData(0, 0, workCanvas.width, workCanvas.height);
+  }
+  return null;
+}
+
+async function performProcess() {
+  const srcData = await getSourceData();
+  if (!srcData) { els.ctx.clearRect(0,0,els.canvas.width,els.canvas.height); return; }
+  
+  const width = workCanvas.width, height = workCanvas.height;
+  resultCanvas.width = width; resultCanvas.height = height;
+  
+  // Initialize OpenCV Mat from Source
+  let currentMat = cv.matFromImageData(srcData);
+  
+  for (const block of state.pipeline) {
+    let nextMat = null;
+    try {
+      nextMat = processOpenCVBlock(currentMat, block.type, block.params);
+    } catch(err) {
+      console.error(`Error in block ${block.type}:`, err);
+      showMsg(`Error in ${block.type}`);
+      nextMat = currentMat.clone(); // Pass through on error
+    }
+    
+    // Memory management: free previous mat if it was replaced
+    if (nextMat && nextMat !== currentMat) {
+      currentMat.delete();
+      currentMat = nextMat;
+    }
+  }
+  
+  // Render back to ImageData
+  cv.imshow(resultCanvas, currentMat);
+  state.lastOrigData = srcData; 
+  state.lastProcData = resultCtx.getImageData(0, 0, width, height);
+  
+  // Clean up final Mat
+  currentMat.delete();
+  
+  // Set physical dimensions of canvas to match original resolution so panning/zooming works cleanly
+  if (els.canvas.width !== width || els.canvas.height !== height) {
+    els.canvas.width = width; els.canvas.height = height;
+    els.overlayCanvas.width = width; els.overlayCanvas.height = height;
+  }
+  
+  drawToViewer(state.lastOrigData, state.lastProcData, width, height);
+  calculateStats(state.lastProcData);
+}
+
+function processOpenCVBlock(src, type, params) {
+  let dst = new cv.Mat();
+  
+  // Basic
+  if (type === 'grayscale') {
+    cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
+    cv.cvtColor(dst, dst, cv.COLOR_GRAY2RGBA, 0);
+  } 
+  else if (type === 'invert') {
+    cv.bitwise_not(src, dst);
+  }
+  else if (type === 'brightContrast') {
+    src.convertTo(dst, -1, params.contrast, params.brightness);
+  }
+  
+  // Histogram
+  else if (type === 'histEq') {
+    let gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+    cv.equalizeHist(gray, gray);
+    cv.cvtColor(gray, dst, cv.COLOR_GRAY2RGBA, 0);
+    gray.delete();
+  }
+  else if (type === 'clahe') {
+    let gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+    let clahe = new cv.CLAHE(params.clipLimit, new cv.Size(params.tileSize, params.tileSize));
+    clahe.apply(gray, gray);
+    cv.cvtColor(gray, dst, cv.COLOR_GRAY2RGBA, 0);
+    gray.delete(); clahe.delete();
+  }
+  
+  // Filters
+  else if (type === 'gaussianBlur') {
+    let k = params.kernel;
+    cv.GaussianBlur(src, dst, new cv.Size(k, k), params.sigma, params.sigma, cv.BORDER_DEFAULT);
+  }
+  else if (type === 'medianBlur') {
+    cv.medianBlur(src, dst, params.kernel);
+  }
+  else if (type === 'sharpen') {
+    let gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+    let lap = new cv.Mat();
+    cv.Laplacian(gray, lap, cv.CV_8U, 1, 1, 0, cv.BORDER_DEFAULT);
+    cv.convertScaleAbs(lap, lap, params.amount, 0);
+    cv.subtract(gray, lap, gray); // Sharpen = Original - Laplacian
+    cv.cvtColor(gray, dst, cv.COLOR_GRAY2RGBA, 0);
+    gray.delete(); lap.delete();
+  }
+  
+  // Edges
+  else if (type === 'sobel') {
+    let gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+    let grad = new cv.Mat();
+    cv.Sobel(gray, grad, cv.CV_8U, params.dx, params.dy, params.ksize, 1, 0, cv.BORDER_DEFAULT);
+    cv.cvtColor(grad, dst, cv.COLOR_GRAY2RGBA, 0);
+    gray.delete(); grad.delete();
+  }
+  else if (type === 'canny') {
+    let gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+    cv.Canny(gray, gray, params.t1, params.t2, 3, false);
+    cv.cvtColor(gray, dst, cv.COLOR_GRAY2RGBA, 0);
+    gray.delete();
+  }
+
+  // Morphology
+  else if (type === 'morphology') {
+    let shape = cv.MORPH_RECT;
+    if (params.shape === 'Cross') shape = cv.MORPH_CROSS;
+    if (params.shape === 'Ellipse') shape = cv.MORPH_ELLIPSE;
+    
+    let op = cv.MORPH_OPEN;
+    if(params.op==='Erode') op=cv.MORPH_ERODE;
+    if(params.op==='Dilate') op=cv.MORPH_DILATE;
+    if(params.op==='Close') op=cv.MORPH_CLOSE;
+    if(params.op==='Gradient') op=cv.MORPH_GRADIENT;
+    if(params.op==='Top Hat') op=cv.MORPH_TOPHAT;
+    if(params.op==='Black Hat') op=cv.MORPH_BLACKHAT;
+
+    let M = cv.getStructuringElement(shape, new cv.Size(params.ksize, params.ksize));
+    cv.morphologyEx(src, dst, op, M, new cv.Point(-1, -1), params.iters, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
+    M.delete();
+  }
+  
+  // Segmentation
+  else if (type === 'threshold') {
+    let gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+    let threshType = cv.THRESH_BINARY;
+    if(params.type==='Binary Inv') threshType = cv.THRESH_BINARY_INV;
+    if(params.type==='Trunc') threshType = cv.THRESH_TRUNC;
+    if(params.type==='ToZero') threshType = cv.THRESH_TOZERO;
+    if(params.type==='ToZero Inv') threshType = cv.THRESH_TOZERO_INV;
+    if(params.type==='Otsu') threshType = cv.THRESH_BINARY | cv.THRESH_OTSU;
+    
+    cv.threshold(gray, gray, params.level, 255, threshType);
+    cv.cvtColor(gray, dst, cv.COLOR_GRAY2RGBA, 0);
+    gray.delete();
+  }
+  else if (type === 'distTransform') {
+    let gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+    cv.threshold(gray, gray, 0, 255, cv.THRESH_BINARY | cv.THRESH_OTSU);
+    let dist = new cv.Mat();
+    cv.distanceTransform(gray, dist, cv.DIST_L2, 5);
+    cv.normalize(dist, dist, 0, 255, cv.NORM_MINMAX, cv.CV_8UC1);
+    cv.cvtColor(dist, dst, cv.COLOR_GRAY2RGBA, 0);
+    gray.delete(); dist.delete();
+  }
+  else if (type === 'connectedComps') {
+    let gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+    cv.threshold(gray, gray, 0, 255, cv.THRESH_BINARY | cv.THRESH_OTSU);
+    let labels = new cv.Mat();
+    let numComps = cv.connectedComponents(gray, labels, 8, cv.CV_32S);
+    
+    // Colorize
+    dst = new cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC4);
+    let colors = [];
+    for(let i=0; i<numComps; i++) colors.push([Math.random()*255, Math.random()*255, Math.random()*255, 255]);
+    colors[0] = [0,0,0,255]; // background
+    
+    for (let r=0; r<dst.rows; r++) {
+      for (let c=0; c<dst.cols; c++) {
+        let label = labels.intPtr(r, c)[0];
+        let color = colors[label];
+        dst.ucharPtr(r, c)[0] = color[0];
+        dst.ucharPtr(r, c)[1] = color[1];
+        dst.ucharPtr(r, c)[2] = color[2];
+        dst.ucharPtr(r, c)[3] = 255;
+      }
+    }
+    gray.delete(); labels.delete();
+  }
+  else if (type === 'watershed') {
+    let src3 = new cv.Mat();
+    cv.cvtColor(src, src3, cv.COLOR_RGBA2RGB); // Watershed needs 8UC3
+    let gray = new cv.Mat();
+    cv.cvtColor(src3, gray, cv.COLOR_RGB2GRAY);
+    let thresh = new cv.Mat();
+    cv.threshold(gray, thresh, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU);
+    
+    // Morph open
+    let kernel = cv.Mat.ones(3, 3, cv.CV_8U);
+    let opening = new cv.Mat();
+    cv.morphologyEx(thresh, opening, cv.MORPH_OPEN, kernel, new cv.Point(-1,-1), 2);
+    
+    // Sure BG
+    let sure_bg = new cv.Mat();
+    cv.dilate(opening, sure_bg, kernel, new cv.Point(-1,-1), 3);
+    
+    // Sure FG
+    let dist_transform = new cv.Mat();
+    cv.distanceTransform(opening, dist_transform, cv.DIST_L2, 5);
+    let minMax = cv.minMaxLoc(dist_transform);
+    let sure_fg = new cv.Mat();
+    cv.threshold(dist_transform, sure_fg, 0.5 * minMax.maxVal, 255, 0);
+    sure_fg.convertTo(sure_fg, cv.CV_8U);
+    
+    // Unknown
+    let unknown = new cv.Mat();
+    cv.subtract(sure_bg, sure_fg, unknown);
+    
+    // Markers
+    let markers = new cv.Mat();
+    cv.connectedComponents(sure_fg, markers);
+    
+    // Add 1 to markers, set unknown to 0
+    let m1 = new cv.Mat.ones(markers.rows, markers.cols, markers.type());
+    cv.add(markers, m1, markers);
+    for(let r=0; r<markers.rows; r++) {
+      for(let c=0; c<markers.cols; c++) {
+        if(unknown.ucharPtr(r,c)[0] === 255) markers.intPtr(r,c)[0] = 0;
+      }
+    }
+    
+    cv.watershed(src3, markers);
+    
+    // Colorize output
+    dst = new cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC4);
+    for (let r=0; r<markers.rows; r++) {
+      for (let c=0; c<markers.cols; c++) {
+        let index = markers.intPtr(r,c)[0];
+        if (index === -1) { // Boundaries
+          dst.ucharPtr(r, c)[0] = 255; dst.ucharPtr(r, c)[3] = 255;
+        } else {
+          // Pass original colors for regions, or random colors. Passing original is cleaner here.
+          dst.ucharPtr(r, c)[0] = src3.ucharPtr(r, c)[0];
+          dst.ucharPtr(r, c)[1] = src3.ucharPtr(r, c)[1];
+          dst.ucharPtr(r, c)[2] = src3.ucharPtr(r, c)[2];
+          dst.ucharPtr(r, c)[3] = 255;
+        }
+      }
+    }
+    src3.delete(); gray.delete(); thresh.delete(); kernel.delete(); opening.delete(); sure_bg.delete(); dist_transform.delete(); sure_fg.delete(); unknown.delete(); markers.delete(); m1.delete();
+  }
+  
+  // Contours
+  else if (type === 'findContours') {
+    let gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+    cv.Canny(gray, gray, 50, 150, 3, false);
+    let contours = new cv.MatVector();
+    let hierarchy = new cv.Mat();
+    cv.findContours(gray, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+    
+    src.copyTo(dst); // Draw on original
+    let color = new cv.Scalar(0, 255, 0, 255);
+    for (let i = 0; i < contours.size(); ++i) {
+        cv.drawContours(dst, contours, i, color, params.thickness, cv.LINE_8, hierarchy, 0);
+    }
+    gray.delete(); contours.delete(); hierarchy.delete();
+  }
+  
+  // Frequency (FFT)
+  else if (type === 'fftMag') {
+    let gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+    let m = cv.getOptimalDFTSize(gray.rows);
+    let n = cv.getOptimalDFTSize(gray.cols);
+    let padded = new cv.Mat();
+    cv.copyMakeBorder(gray, padded, 0, m - gray.rows, 0, n - gray.cols, cv.BORDER_CONSTANT, new cv.Scalar(0, 0, 0, 0));
+    gray.delete();
+
+    let plane0 = new cv.Mat();
+    padded.convertTo(plane0, cv.CV_32F);
+    padded.delete();
+    
+    let planes = new cv.MatVector();
+    let complexI = new cv.Mat();
+    let plane1 = new cv.Mat.zeros(plane0.rows, plane0.cols, cv.CV_32F);
+    planes.push_back(plane0);
+    planes.push_back(plane1);
+    cv.merge(planes, complexI);
+    plane0.delete(); plane1.delete();
+
+    cv.dft(complexI, complexI);
+    cv.split(complexI, planes);
+    complexI.delete();
+
+    cv.magnitude(planes.get(0), planes.get(1), planes.get(0));
+    let mag = planes.get(0);
+
+    let m1 = new cv.Mat.ones(mag.rows, mag.cols, mag.type());
+    cv.add(mag, m1, mag);
+    m1.delete();
+    cv.log(mag, mag);
+
+    // crop
+    let rect = new cv.Rect(0, 0, mag.cols & -2, mag.rows & -2);
+    let cropped = mag.roi(rect);
+    mag.delete();
+    mag = cropped;
+
+    // shift
+    let cx = mag.cols / 2;
+    let cy = mag.rows / 2;
+    let q0 = mag.roi(new cv.Rect(0, 0, cx, cy));
+    let q1 = mag.roi(new cv.Rect(cx, 0, cx, cy));
+    let q2 = mag.roi(new cv.Rect(0, cy, cx, cy));
+    let q3 = mag.roi(new cv.Rect(cx, cy, cx, cy));
+
+    let tmp = new cv.Mat();
+    q0.copyTo(tmp); q3.copyTo(q0); tmp.copyTo(q3);
+    q1.copyTo(tmp); q2.copyTo(q1); tmp.copyTo(q2);
+    tmp.delete(); q0.delete(); q1.delete(); q2.delete(); q3.delete();
+
+    cv.normalize(mag, mag, 0, 255, cv.NORM_MINMAX);
+    let out = new cv.Mat();
+    mag.convertTo(out, cv.CV_8UC1);
+    mag.delete();
+    cv.cvtColor(out, dst, cv.COLOR_GRAY2RGBA);
+    out.delete(); planes.delete();
+  }
+  
+  else {
+    src.copyTo(dst); // fallback
+  }
+  
+  return dst;
+}
+
+function drawToViewer(origImgData, procImgData, w, h) {
+  if (!origImgData || !procImgData) return;
+  els.ctx.clearRect(0,0,w,h);
+  els.splitHandle.style.display = 'none';
+  
+  if (state.viewMode === 'processed') {
+    els.ctx.putImageData(procImgData, 0, 0);
+  } else if (state.viewMode === 'original') {
+    els.ctx.putImageData(origImgData, 0, 0);
+  } else if (state.viewMode === 'split') {
+    els.ctx.putImageData(origImgData, 0, 0);
+    const splitX = Math.floor(w * state.splitPosition);
+    els.ctx.putImageData(procImgData, 0, 0, splitX, 0, w - splitX, h);
+    
+    els.splitHandle.style.display = 'block';
+    els.splitHandle.style.left = `${state.splitPosition * 100}%`;
+  }
+}
+
+let isPanning = false, isDraggingSplit = false;
+let startX, startY, startPanX, startPanY;
+
+els.viewerContainer.addEventListener('contextmenu', e => e.preventDefault());
+
+els.viewerContainer.addEventListener('mousedown', (e) => {
+  if (e.button === 2) { // Right click = pan
+    isPanning = true; startX = e.clientX; startY = e.clientY;
+    startPanX = state.panX; startPanY = state.panY;
+    els.viewerContainer.style.cursor = 'grabbing';
+  }
+});
+
+els.splitHandle.addEventListener('mousedown', (e) => {
+  if (e.button === 0 && state.viewMode === 'split') { // Left click = drag split
+    isDraggingSplit = true;
+    e.preventDefault();
+  }
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (isPanning) {
+    state.panX = startPanX + (e.clientX - startX);
+    state.panY = startPanY + (e.clientY - startY);
+    applyZoom();
+  } else if (isDraggingSplit) {
+    const rect = els.canvasWrapper.getBoundingClientRect();
+    state.splitPosition = clamp((e.clientX - rect.left) / rect.width);
+    els.splitHandle.style.left = `${state.splitPosition * 100}%`;
+    if(state.lastOrigData) drawToViewer(state.lastOrigData, state.lastProcData, els.canvas.width, els.canvas.height);
+  } 
+});
+
+window.addEventListener('mouseup', (e) => {
+  if (e.button === 2) { isPanning = false; els.viewerContainer.style.cursor = 'crosshair'; }
+  isDraggingSplit = false;
+});
+
+document.getElementById('btnFit').addEventListener('click', () => { 
+  if(!state.sourceImage && !state.videoEl) return;
+  const cw = els.viewerContainer.clientWidth - 32;
+  const ch = els.viewerContainer.clientHeight - 32;
+  const iw = els.canvas.width || 1;
+  const ih = els.canvas.height || 1;
+  state.zoomLevel = Math.min(cw/iw, ch/ih, 1.0);
+  
+  state.panX = (els.viewerContainer.clientWidth - (iw * state.zoomLevel)) / 2;
+  state.panY = (els.viewerContainer.clientHeight - (ih * state.zoomLevel)) / 2;
+  applyZoom(); 
+});
+
+document.getElementById('btnZoomIn').addEventListener('click', () => { state.zoomLevel *= 1.2; applyZoom(); });
+document.getElementById('btnZoomOut').addEventListener('click', () => { state.zoomLevel /= 1.2; applyZoom(); });
+
+function applyZoom() {
+  const transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoomLevel})`;
+  els.canvasWrapper.style.transform = transform;
+}
+
+function calculateStats(imgData) {
+  const d = imgData.data; let sum = 0, sumSq = 0, min = 255, max = 0;
+  const hist = new Uint32Array(256), pixels = d.length / 4;
+  for(let i=0; i<d.length; i+=4) { const v = Math.round(luma(d[i],d[i+1],d[i+2])); sum+=v; sumSq+=v*v; if(v<min)min=v; if(v>max)max=v; hist[v]++; }
+  const mean = sum/pixels, std = Math.sqrt(Math.max(0, (sumSq/pixels)-(mean*mean)));
+  
+  document.getElementById('statMean').textContent = mean.toFixed(1);
+  document.getElementById('statStd').textContent = std.toFixed(1);
+  document.getElementById('statMin').textContent = min;
+  document.getElementById('statMax').textContent = max;
+  
+  els.hctx.clearRect(0, 0, els.histCanvas.width, els.histCanvas.height);
+  const maxH = Math.max(...hist); if (maxH === 0) return;
+  els.hctx.fillStyle = '#2f81f7';
+  for(let i=0; i<256; i++) { const h = (hist[i]/maxH)*els.histCanvas.height; els.hctx.fillRect(i*(els.histCanvas.width/256), els.histCanvas.height-h, Math.ceil(els.histCanvas.width/256), h); }
+}
+
+document.querySelectorAll('[data-view]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('[data-view]').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active'); state.viewMode = e.target.dataset.view;
+    if (state.lastOrigData) drawToViewer(state.lastOrigData, state.lastProcData, els.canvas.width, els.canvas.height);
+  });
+});
+
+document.getElementById('btnUndo').addEventListener('click', undo);
+document.getElementById('btnRedo').addEventListener('click', redo);
+document.getElementById('btnClearPipe').addEventListener('click', () => { saveHistory(); state.pipeline = []; state.selectedBlockId = null; renderPipelineUI(); requestProcess(); });
+
+document.getElementById('btnPrevFrame').addEventListener('click', () => { if (state.currentFrameIndex > 0) selectFrame(state.currentFrameIndex - 1); });
+document.getElementById('btnNextFrame').addEventListener('click', () => { if (state.currentFrameIndex < state.frames.length - 1) selectFrame(state.currentFrameIndex + 1); });
+
+async function findExtremeFrame(isBrightest) {
+  if (state.mediaType !== 'video' || state.frames.length === 0) return;
+  setStatus(`Finding ${isBrightest ? 'brightest' : 'darkest'} frame...`);
+  let extremeVal = isBrightest ? -1 : 256, bestIdx = 0; const v = state.videoEl;
+  const tempC = document.createElement('canvas'); tempC.width = 64; tempC.height = 64; const tCtx = tempC.getContext('2d', {willReadFrequently:true});
+  for(let i=0; i<state.frames.length; i++) {
+    await seekVideo(v, state.frames[i].time); tCtx.drawImage(v, 0, 0, 64, 64);
+    const d = tCtx.getImageData(0,0,64,64).data; let sum = 0;
+    for(let k=0; k<d.length; k+=4) sum += luma(d[k], d[k+1], d[k+2]);
+    const mean = sum / (d.length/4);
+    if (isBrightest && mean > extremeVal) { extremeVal = mean; bestIdx = i; }
+    if (!isBrightest && mean < extremeVal) { extremeVal = mean; bestIdx = i; }
+  }
+  selectFrame(bestIdx); setStatus(`${isBrightest ? 'Brightest' : 'Darkest'} frame is F${bestIdx}`);
+}
+
+document.getElementById('btnBrightest').addEventListener('click', () => findExtremeFrame(true));
+document.getElementById('btnDarkest').addEventListener('click', () => findExtremeFrame(false));
+
+document.getElementById('btnSaveImg').addEventListener('click', () => {
+  if (!state.mediaType) return showMsg('No image loaded.');
+  const a = document.createElement('a');
+  a.download = `${state.fileName.split('.')[0] || 'media'}_frame${state.currentFrameIndex}_processed.png`;
+  a.href = resultCanvas.toDataURL('image/png');
+  a.click();
+});
+
+document.getElementById('btnSavePipe').addEventListener('click', () => {
+  const data = JSON.stringify({ pipeline: state.pipeline }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'cv_pipeline.json'; a.click();
+});
+
+document.getElementById('btnLoadPipe').addEventListener('click', () => document.getElementById('pipeUpload').click());
+document.getElementById('pipeUpload').addEventListener('change', (e) => {
+  const f = e.target.files[0]; if(!f) return; const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (parsed.pipeline && Array.isArray(parsed.pipeline)) {
+        saveHistory(); state.pipeline = parsed.pipeline; state.selectedBlockId = null;
+        renderPipelineUI(); requestProcess(); showMsg('Pipeline loaded successfully.');
+      }
+    } catch(err) { showMsg('Invalid pipeline JSON format.'); }
+  };
+  reader.readAsText(f);
+});
+
+// Init
+initTools();
+renderPipelineUI();
+</script>
+</body>
+</html>
