@@ -100,3 +100,148 @@
   .comparison-inline-header { align-items: flex-start; }
   .comparison-workspace-view .comparison-dialog-footer { align-items: flex-start; flex-direction: column; }
 }
+
+/* Compact, image-first four-slot comparison workspace. */
+.comparison-workspace-view { gap: 6px; padding: 8px; overflow: hidden; }
+.comparison-inline-header { align-items: center; padding: 0 0 6px; margin: 0; }
+.comparison-inline-header h2 { margin: 0; font-size: 14px; }
+.comparison-inline-header p,
+.comparison-workspace-toolbar,
+.comparison-dialog-footer { display: none !important; }
+.comparison-workspace-view .comparison-grid {
+  flex: 1 1 auto; min-height: 0; min-width: 0; width: 100%; height: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+  gap: 6px; overflow: hidden;
+}
+.comparison-workspace-view .comparison-slot {
+  min-width: 0; min-height: 0; height: 100%; overflow: hidden; border-radius: 6px;
+  display: flex; flex-direction: column; cursor: pointer;
+}
+.comparison-workspace-view .comparison-slot-toolbar { min-height: 24px; flex: 0 0 24px; padding: 2px 7px; }
+.comparison-workspace-view .comparison-slot-toolbar > strong { font-size: 10px; }
+.comparison-workspace-view .comparison-slot-controls { gap: 3px; }
+.comparison-workspace-view .comparison-slot-controls button { min-width: 20px; min-height: 18px; padding: 0 5px; line-height: 1; font-size: 10px; }
+.comparison-workspace-view .comparison-slot-empty {
+  flex: 1 1 auto; width: 100%; min-height: 0 !important; padding: 0; border: 0; border-radius: 0;
+  background: #090c10; color: #718096; display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.comparison-workspace-view .comparison-empty-icon { font-size: 28px; line-height: 1; }
+.comparison-workspace-view .comparison-image-frame { flex: 1 1 auto; min-height: 0; height: 0; padding: 4px; overflow: hidden; }
+.comparison-workspace-view .comparison-image-frame img { display: block; width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; }
+.comparison-workspace-view .comparison-slot-target { box-shadow: inset 0 0 0 2px var(--accent); }
+@media (max-width: 560px) {
+  .comparison-workspace-view .comparison-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; grid-template-rows: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+
+/* Issue 18 — compact, content-driven comparison slots with image-first previews. */
+.comparison-workspace-view .comparison-workspace-toolbar,
+.comparison-workspace-view .comparison-dialog-footer { display: none !important; }
+.comparison-workspace-view { padding: 8px; gap: 6px; }
+.comparison-workspace-view .comparison-inline-header { padding: 0 2px 5px; }
+.comparison-workspace-view .comparison-inline-header h2 { font-size: 13px; margin: 0; }
+.comparison-workspace-view .comparison-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 6px; min-height: 0; }
+.comparison-workspace-view .comparison-grid[data-visible="1"] { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.comparison-workspace-view .comparison-grid[data-visible="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr); }
+.comparison-workspace-view .comparison-grid[data-visible="3"] { grid-template-rows: repeat(2, minmax(0, 1fr)); }
+.comparison-workspace-view .comparison-slot { min-height: 0; height: 100%; }
+.comparison-workspace-view .comparison-slot-toolbar { padding: 3px 7px; min-height: 24px; }
+.comparison-workspace-view .comparison-slot-toolbar > strong { font-size: 10px; }
+.comparison-workspace-view .comparison-slot-empty-card .comparison-slot-empty { min-height: 0; height: 100%; padding: 4px; gap: 2px; }
+.comparison-workspace-view .comparison-empty-icon { font-size: 18px; }
+.comparison-workspace-view .comparison-empty-label { font-size: 9px; }
+.comparison-workspace-view .comparison-image-frame { min-height: 0; height: 100%; flex: 1 1 auto; padding: 3px; }
+.comparison-workspace-view .comparison-image-frame img { width: 100%; height: 100%; max-height: none; object-fit: contain; }
+@media (max-width: 760px) {
+  .comparison-workspace-view .comparison-grid[data-visible="2"], .comparison-workspace-view .comparison-grid[data-visible="3"], .comparison-workspace-view .comparison-grid[data-visible="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .comparison-workspace-view .comparison-grid[data-visible="1"] { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Issue 19 — reclaim vertical space and size comparison cards to the number of visible slots. */
+.comparison-workspace-view {
+  gap: 3px !important;
+  padding: 4px 6px !important;
+  overflow: hidden !important;
+}
+.comparison-workspace-view .comparison-inline-header {
+  padding: 0 2px 3px !important;
+  min-height: 24px;
+}
+.comparison-workspace-view .comparison-inline-header h2 { font-size: 12px !important; line-height: 1.2; }
+.comparison-workspace-view #btnCloseComparisonWorkspace { min-height: 22px; padding: 3px 7px; font-size: 10px; }
+.comparison-workspace-view .comparison-grid {
+  flex: 0 1 auto !important;
+  align-content: start;
+  grid-auto-flow: row;
+  gap: 4px !important;
+  overflow: hidden;
+  height: auto;
+}
+.comparison-workspace-view .comparison-grid[data-visible="1"] {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: minmax(90px, clamp(90px, 18vh, 150px)) !important;
+}
+.comparison-workspace-view .comparison-grid[data-visible="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-rows: minmax(90px, clamp(90px, 20vh, 165px)) !important;
+}
+.comparison-workspace-view .comparison-grid[data-visible="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-rows: minmax(90px, clamp(90px, 20vh, 165px)) !important;
+}
+.comparison-workspace-view .comparison-grid[data-visible="4"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(2, minmax(85px, clamp(85px, 15vh, 130px))) !important;
+}
+.comparison-workspace-view .comparison-slot { min-height: 0 !important; height: 100%; }
+.comparison-workspace-view .comparison-slot-toolbar { min-height: 20px; flex-basis: 20px; padding: 1px 5px; }
+.comparison-workspace-view .comparison-slot-toolbar > strong { font-size: 9px; }
+.comparison-workspace-view .comparison-slot-controls button { min-height: 17px; min-width: 18px; padding: 0 4px; font-size: 9px; }
+.comparison-workspace-view .comparison-slot-empty { min-height: 0 !important; padding: 2px; gap: 3px; }
+.comparison-workspace-view .comparison-empty-icon { font-size: 18px; }
+.comparison-workspace-view .comparison-slot-empty strong { font-size: 10px; }
+.comparison-workspace-view .comparison-slot-empty span:last-child { display: none; }
+.comparison-workspace-view .comparison-image-frame { min-height: 0; height: 0; padding: 2px; }
+.comparison-workspace-view .comparison-image-frame img { width: 100%; height: 100%; max-height: 100%; object-fit: contain; }
+@media (max-width: 760px) {
+  .comparison-workspace-view .comparison-grid[data-visible="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .comparison-workspace-view .comparison-grid[data-visible="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+/* Issue 20 — occupied images only, with a compact add-slot control beside Back to editor. */
+.comparison-header-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; flex: 0 0 auto; }
+.comparison-workspace-view .comparison-header-actions .btn { min-height: 24px; padding: 3px 8px; font-size: 10px; white-space: nowrap; }
+.comparison-workspace-view #btnAddComparisonSlot:disabled { opacity: .55; cursor: not-allowed; }
+.comparison-workspace-view .comparison-grid[data-visible="0"] { display: block; height: auto; min-height: 0; }
+.comparison-workspace-view .comparison-no-images { color: var(--text-muted); font-size: 11px; padding: 10px 4px; }
+.comparison-workspace-view .comparison-grid[data-visible="1"] {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: minmax(170px, clamp(170px, 36vh, 360px)) !important;
+}
+.comparison-workspace-view .comparison-grid[data-visible="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-rows: minmax(150px, clamp(150px, 34vh, 320px)) !important;
+}
+.comparison-workspace-view .comparison-grid[data-visible="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-rows: minmax(130px, clamp(130px, 30vh, 280px)) !important;
+}
+.comparison-workspace-view .comparison-grid[data-visible="4"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(2, minmax(130px, clamp(130px, 27vh, 250px))) !important;
+}
+.comparison-workspace-view .comparison-slot { min-height: 0 !important; height: 100%; }
+.comparison-workspace-view .comparison-slot-filled-card .comparison-image-frame {
+  min-height: 0; height: auto; flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
+  padding: 4px; overflow: hidden;
+}
+.comparison-workspace-view .comparison-slot-filled-card .comparison-image-frame img {
+  display: block; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; flex: 0 1 auto;
+}
+@media (max-width: 760px) {
+  .comparison-workspace-view .comparison-grid[data-visible="2"],
+  .comparison-workspace-view .comparison-grid[data-visible="3"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .comparison-workspace-view .comparison-header-actions { gap: 4px; }
+  .comparison-workspace-view .comparison-header-actions .btn { padding: 3px 5px; }
+}

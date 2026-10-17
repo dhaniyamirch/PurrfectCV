@@ -92,70 +92,7 @@
         </div>
       </details>
 
-      <details class="menu-dropdown menu-branches-dropdown" id="branchesMenu">
-        <summary>Branches</summary>
-        <div class="menu-panel branch-menu-panel" role="group" aria-label="Branch controls">
-          <div class="branch-toolbar" id="branchToolbar" aria-label="Processing branches">
-      <div class="branch-field branch-picker-field">
-        <label for="branchSelect">Branch</label>
-        <select id="branchSelect" title="Switch the active processing branch"></select>
-      </div>
-      <input id="branchRenameInput" class="branch-name-input" type="text" maxlength="60" placeholder="Rename selected branch" aria-label="Branch name">
-      <button class="btn btn-small" id="btnNewBranch" title="Create a branch from the active pipeline">＋ Branch</button>
-      <button class="btn btn-small" id="btnRenameBranch" title="Rename the active branch">Rename</button>
-      <button class="btn btn-small danger-outline" id="btnDeleteBranch" title="Delete the active branch">Delete</button>
-      <div class="branch-toolbar-divider"></div>
-      <div class="branch-field merge-source-field">
-        <label for="mergeSourceSelect">Merge from</label>
-        <select id="mergeSourceSelect" title="Source branch to merge into the active branch"></select>
-      </div>
-      <select id="mergeStrategySelect" class="merge-strategy-select" aria-label="Merge strategy" title="Choose how branch changes or image outputs are combined">
-        <optgroup label="Pipeline merge">
-          <option value="auto">Auto-merge compatible edits</option>
-          <option value="append">Append source pipeline</option>
-          <option value="replace">Replace active pipeline</option>
-        </optgroup>
-        <optgroup label="Image output merge">
-          <option value="blend">Blend outputs</option>
-          <option value="add">Add pixel values</option>
-          <option value="bitwise-or">Bitwise OR</option>
-          <option value="bitwise-and">Bitwise AND</option>
-          <option value="bitwise-xor">Bitwise XOR</option>
-          <option value="masked-composite">Masked composite</option>
-          <option value="choose-output">Choose one output</option>
-        </optgroup>
-      </select>
-      <div class="branch-merge-direction" id="mergeDirectionStatus" role="status" aria-live="polite">Choose a source branch to merge into the active branch.</div>
-      <div class="blend-options" id="blendOptions" hidden aria-label="Image output merge options">
-        <label class="merge-option-group" id="blendModeGroup" for="blendModeSelect">Blend mode
-          <select id="blendModeSelect" aria-label="Blend mode" title="Blend mode">
-            <option value="normal">Normal</option>
-            <option value="multiply">Multiply</option>
-            <option value="screen">Screen</option>
-            <option value="overlay">Overlay</option>
-            <option value="difference">Difference</option>
-            <option value="darken">Darken</option>
-            <option value="lighten">Lighten</option>
-          </select>
-        </label>
-        <label class="blend-opacity-label merge-option-group" id="blendOpacityGroup" for="blendOpacityInput">Opacity <span id="blendOpacityValue">50%</span>
-          <input id="blendOpacityInput" type="range" min="0" max="100" step="1" value="50" aria-label="Blend opacity">
-        </label>
-        <label class="merge-option-group" id="maskThresholdGroup" for="maskThresholdInput" hidden>Mask threshold <span id="maskThresholdValue">128</span>
-          <input id="maskThresholdInput" type="range" min="0" max="255" step="1" value="128" aria-label="Masked composite threshold">
-        </label>
-        <label class="merge-option-group" id="chooseOutputGroup" for="chooseOutputSelect" hidden>Use output
-          <select id="chooseOutputSelect" aria-label="Choose branch output">
-            <option value="target">Active target</option>
-            <option value="source">Source branch</option>
-          </select>
-        </label>
-      </div>
-      <button class="btn primary btn-small" id="btnMergeBranch" title="Merge the selected source branch into the active branch">Merge</button>
-      <span class="branch-message" id="branchMessage" role="status"></span>
-    </div>
-        </div>
-      </details>
+      
 
       <details class="menu-dropdown" id="settingsMenu">
         <summary>Settings</summary>
@@ -273,10 +210,12 @@
       <section class="comparison-workspace-view" id="comparisonWorkspaceView" aria-label="Comparison workspace" hidden>
         <header class="comparison-dialog-header comparison-inline-header">
           <div>
-            <h2>Comparison workspace</h2>
-            <p>Compare up to four full-resolution stage outputs. Choose a slot, then use “Add to slot” on a stage preview below.</p>
+            <h2>Compare outputs</h2>
           </div>
-          <button class="btn" id="btnCloseComparisonWorkspace" type="button" aria-label="Return to image editor">Back to editor</button>
+          <div class="comparison-header-actions">
+            <button class="btn" id="btnAddComparisonSlot" type="button" aria-label="Select the next comparison slot">＋ Add slot</button>
+            <button class="btn" id="btnCloseComparisonWorkspace" type="button" aria-label="Return to image editor">Back to editor</button>
+          </div>
         </header>
         <div class="comparison-workspace-toolbar">
           <div class="comparison-target-control">
@@ -300,7 +239,7 @@
       <div class="inspector-panel" id="inspectorPanel">
         <div class="panel-title-small">BLOCK INSPECTOR</div>
         <div id="inspectorContent" class="inspector-empty">
-          Select a block in the processing pipeline below to edit its parameters.
+          Select a processing node in the Node workspace to edit its parameters.
         </div>
       </div>
       <div class="stats-panel" id="statsPanel">
@@ -316,37 +255,64 @@
     </div>
   </div>
 
+  <div id="workspaceSplitHandle" role="separator" tabindex="0" aria-label="Resize image editor and node workspace" aria-orientation="horizontal" title="Drag to make the image editor or node workspace larger"></div>
+
   <div class="bottom-area">
-    <div class="pipeline-area" id="pipelineArea"></div>
-    <section class="branch-graph-area" id="branchGraphArea" aria-label="Visual branch timeline" hidden>
+    <div class="pipeline-area" id="pipelineArea" aria-hidden="true"></div>
+    <section class="branch-graph-area" id="branchGraphArea" aria-label="Interactive node workspace">
       <div class="branch-graph-header">
         <div class="branch-graph-heading">
           <span class="timeline-title">Node workspace</span>
           <span class="branch-graph-summary" id="branchGraphSummary">Main pipeline</span>
         </div>
         <div class="branch-graph-actions">
-          <button class="btn btn-small" id="btnAddMergeNode" type="button" title="Apply the selected merge source and operator to the active target">Merge branches</button>
+          <button class="btn btn-small comparison-open-button" id="btnOpenComparisonWorkspace" type="button" title="Open the four comparison slots">Comparison slots</button>
           <button class="btn btn-small" id="btnResetGraphLayout" type="button" title="Reset node positions to the default layout">Reset layout</button>
-          <span class="branch-graph-hint">Drag blocks to arrange them. Drag an operation from the left tools into this canvas to add it.</span>
         </div>
+        <div class="workspace-legacy-controls" hidden aria-hidden="true">
+          <label class="workspace-active-branch" for="branchSelect">Active branch
+            <select id="branchSelect" title="Switch the active processing branch"></select>
+          </label>
+          <details class="workspace-menu" id="branchActionsMenu">
+            <summary>Branch ▾</summary>
+            <div class="workspace-menu-panel branch-menu-panel">
+              <div class="workspace-menu-title">Branch actions</div>
+              <button class="btn btn-small primary" id="btnNewBranch" title="Create a child branch from the active branch">＋ Create child branch</button>
+              <div class="workspace-branch-edit-row">
+                <input id="branchRenameInput" class="branch-name-input" type="text" maxlength="60" placeholder="Branch name" aria-label="Branch name">
+                <button class="btn btn-small" id="btnRenameBranch" title="Rename the active branch">Rename</button>
+              </div>
+              <button class="btn btn-small danger-outline" id="btnDeleteBranch" title="Delete the active branch">Delete active branch</button>
+            </div>
+          </details>
+          <button class="btn btn-small primary" id="btnAddMergeNode" type="button" draggable="true">＋ Merge node</button>
+          <details class="workspace-menu" id="branchMergeDetails" hidden>
+            <summary>Merge ▾</summary>
+            <div class="workspace-menu-panel merge-menu-panel">
+              <div class="workspace-menu-title">Merge into active branch</div>
+              <div class="workspace-merge-row"><label for="mergeSourceSelect">Merge from</label><select id="mergeSourceSelect" title="Source branch to merge into the active branch"></select></div>
+              <label class="workspace-merge-strategy-label" for="mergeStrategySelect">Merge operation</label>
+              <select id="mergeStrategySelect" class="merge-strategy-select" aria-label="Merge strategy" title="Choose how branch changes or image outputs are combined">
+                <optgroup label="Pipeline merge"><option value="auto">Auto-merge compatible edits</option><option value="append">Append source pipeline</option><option value="replace">Replace active pipeline</option></optgroup>
+                <optgroup label="Image output merge"><option value="blend">Blend outputs</option><option value="add">Add pixel values</option><option value="bitwise-or">Bitwise OR</option><option value="bitwise-and">Bitwise AND</option><option value="bitwise-xor">Bitwise XOR</option><option value="masked-composite">Masked composite</option><option value="choose-output">Choose one output</option></optgroup>
+              </select>
+              <div class="blend-options" id="blendOptions" hidden aria-label="Image output merge options">
+                <label class="merge-option-group" id="blendModeGroup" for="blendModeSelect">Blend mode <select id="blendModeSelect" aria-label="Blend mode" title="Blend mode"><option value="normal">Normal</option><option value="multiply">Multiply</option><option value="screen">Screen</option><option value="overlay">Overlay</option><option value="difference">Difference</option><option value="darken">Darken</option><option value="lighten">Lighten</option></select></label>
+                <label class="blend-opacity-label merge-option-group" id="blendOpacityGroup" for="blendOpacityInput">Opacity <span id="blendOpacityValue">50%</span><input id="blendOpacityInput" type="range" min="0" max="100" step="1" value="50" aria-label="Blend opacity"></label>
+                <label class="merge-option-group" id="maskThresholdGroup" for="maskThresholdInput" hidden>Mask threshold <span id="maskThresholdValue">128</span><input id="maskThresholdInput" type="range" min="0" max="255" step="1" value="128" aria-label="Masked composite threshold"></label>
+                <label class="merge-option-group" id="chooseOutputGroup" for="chooseOutputSelect" hidden>Use output <select id="chooseOutputSelect" aria-label="Choose branch output"><option value="target">Active target</option><option value="source">Source branch</option></select></label>
+              </div>
+              <span class="branch-merge-direction" id="mergeDirectionStatus" role="status" aria-live="polite">Choose a source branch to merge into the active branch.</span>
+              <button class="btn btn-small primary merge-apply-button" id="btnMergeBranch" title="Apply the configured merge">Apply merge</button>
+              <span class="branch-message" id="branchMessage" role="status"></span>
+            </div>
+          </details>
+          <button class="btn btn-small" id="btnCompareSelectedNodeOutput" type="button" title="Add the selected node output to the next comparison slot" disabled>Compare selected output</button>
+        </div>
+        <div class="branch-graph-hint">Drag processing tools from the left into this canvas. Move nodes by their headers, connect output ports to input ports, and select a node to inspect its output.</div>
       </div>
       <div class="branch-graph-scroll" id="branchGraphScroll" tabindex="0" aria-label="Scrollable branch graph">
         <div class="branch-graph-canvas" id="branchGraphCanvas"></div>
-      </div>
-    </section>
-    <section class="stage-preview-area" aria-label="Processing stage previews">
-      <div class="stage-preview-header">
-        <div class="stage-preview-heading">
-          <span class="timeline-title">Stage previews</span>
-          <span class="stage-preview-count" id="stagePreviewCount">0 stages</span>
-          <span class="stage-preview-branch" id="stagePreviewBranch">No active branch</span>
-          <button class="btn btn-small" id="btnToggleBranchGraph" type="button" aria-pressed="false" title="Show the movable node workspace">Node workspace</button>
-          <button class="btn btn-small comparison-open-button" id="btnOpenComparisonWorkspace" type="button" title="Show the four comparison slots in the main editor">Compare in editor · 4 slots</button>
-        </div>
-        <span class="stage-preview-hint">Open a stage in the editor or add its full-resolution output to one of four comparison slots.</span>
-      </div>
-      <div class="stage-preview-track" id="stagePreviewTrack" aria-live="polite">
-        <div class="stage-preview-empty">Load an image or video to preview the source and each processing stage.</div>
       </div>
     </section>
     <div class="timeline-area" id="timelineArea" hidden>

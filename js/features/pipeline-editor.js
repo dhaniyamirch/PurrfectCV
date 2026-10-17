@@ -191,7 +191,7 @@ function renderPipelineUI() {
 function renderInspector() {
   els.inspector.innerHTML = '';
   if (!state.selectedBlockId) {
-    els.inspector.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px 0;line-height:1.5;">Select a block in the processing pipeline below to edit its parameters.</div>';
+    els.inspector.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px 0;line-height:1.5;">Select a processing node in the Node workspace to edit its parameters.</div>';
     return;
   }
   const block = state.pipeline.find(b => b.id === state.selectedBlockId);

@@ -29,8 +29,26 @@ function comparisonOccupiedCount() {
 }
 
 function visibleComparisonSlotCount() {
-  // Keep all four slots visible in the main editor so users can discover the workspace.
-  return 4;
+  // Only render slots that contain an image. Empty destinations are selected
+  // with the compact Add slot control in the header, never as giant cards.
+  return comparisonOccupiedCount();
+}
+
+function getVisibleComparisonSlotIndexes() {
+  return state.comparisonSlots.map((slot, index) => slot ? index : -1).filter(index => index >= 0);
+}
+
+function selectNextComparisonSlot() {
+  const nextEmpty = state.comparisonSlots.findIndex(slot => !slot);
+  if (nextEmpty < 0) {
+    const button = document.getElementById('btnAddComparisonSlot');
+    if (button) { button.title = 'All four slots are occupied. Clear a slot to add another image.'; }
+    return;
+  }
+  state.comparisonTargetSlot = nextEmpty;
+  renderComparisonSlots();
+  renderStagePreviewPanel();
+  if (typeof updateCompareSelectedNodeButton === 'function') updateCompareSelectedNodeButton();
 }
 
 function clearComparisonSlot(slotIndex = state.comparisonTargetSlot) {
@@ -42,6 +60,7 @@ function clearComparisonSlot(slotIndex = state.comparisonTargetSlot) {
   state.comparisonTargetSlot = index;
   renderComparisonSlots();
   renderStagePreviewPanel();
+  if (typeof updateCompareSelectedNodeButton === 'function') updateCompareSelectedNodeButton();
 }
 
 function setComparisonTargetSlot(slotIndex) {
@@ -50,6 +69,7 @@ function setComparisonTargetSlot(slotIndex) {
   state.comparisonTargetSlot = index;
   renderComparisonSlots();
   renderStagePreviewPanel();
+  if (typeof updateCompareSelectedNodeButton === 'function') updateCompareSelectedNodeButton();
 }
 
 function renderComparisonSlots() {
@@ -57,6 +77,7 @@ function renderComparisonSlots() {
   const status = document.getElementById('comparisonStatus');
   const clearButton = document.getElementById('btnClearComparisonSlot');
   const targetSelect = document.getElementById('comparisonTargetSlot');
+  const addSlotButton = document.getElementById('btnAddComparisonSlot');
   if (!grid || !status || !clearButton || !targetSelect) return;
 
   const target = state.comparisonSlots[state.comparisonTargetSlot];
@@ -68,84 +89,82 @@ function renderComparisonSlots() {
   targetSelect.value = String(state.comparisonTargetSlot);
   clearButton.disabled = !target;
   clearButton.textContent = `Clear slot ${state.comparisonTargetSlot + 1}`;
+  if (addSlotButton) {
+    const nextEmpty = state.comparisonSlots.findIndex(slot => !slot);
+    addSlotButton.disabled = nextEmpty < 0;
+    addSlotButton.textContent = nextEmpty < 0 ? '4/4 slots full' : `＋ Add slot ${nextEmpty + 1}`;
+    addSlotButton.title = nextEmpty < 0 ? 'All four slots are occupied. Clear a slot first.' : `Select slot ${nextEmpty + 1} as the next destination for a node output.`;
+  }
+  if (!occupied) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'comparison-no-images';
+    emptyState.textContent = 'No comparison images yet — select a node and choose + Slot.';
+    grid.appendChild(emptyState);
+  }
 
-  for (let index = 0; index < visibleCount; index++) {
+  for (const index of getVisibleComparisonSlotIndexes()) {
     const slot = state.comparisonSlots[index];
     const article = document.createElement('article');
     article.className = 'comparison-slot' + (index === state.comparisonTargetSlot ? ' comparison-slot-target' : '') + (slot ? ' comparison-slot-filled-card' : ' comparison-slot-empty-card');
     article.setAttribute('aria-label', `Comparison slot ${index + 1}${slot ? `, ${slot.label}` : ', empty'}`);
+    article.tabIndex = 0;
+    article.addEventListener('click', event => {
+      if (event.target.closest('button')) return;
+      setComparisonTargetSlot(index);
+    });
+    article.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setComparisonTargetSlot(index); }
+    });
 
     const top = document.createElement('div');
     top.className = 'comparison-slot-toolbar';
     const title = document.createElement('strong');
     title.textContent = `Slot ${index + 1}`;
     top.appendChild(title);
-
     const controls = document.createElement('div');
     controls.className = 'comparison-slot-controls';
-    const targetButton = document.createElement('button');
-    targetButton.type = 'button';
-    targetButton.className = 'btn btn-small comparison-slot-target-button';
-    targetButton.textContent = index === state.comparisonTargetSlot ? 'Selected slot' : 'Use this slot';
-    targetButton.disabled = index === state.comparisonTargetSlot;
-    targetButton.addEventListener('click', () => setComparisonTargetSlot(index));
-    controls.appendChild(targetButton);
-
     if (slot) {
       const removeButton = document.createElement('button');
       removeButton.type = 'button';
       removeButton.className = 'btn btn-small comparison-slot-remove';
-      removeButton.textContent = 'Remove';
-      removeButton.title = `Remove image from comparison slot ${index + 1}`;
-      removeButton.addEventListener('click', () => clearComparisonSlot(index));
+      removeButton.textContent = '×';
+      removeButton.title = `Clear slot ${index + 1}`;
+      removeButton.setAttribute('aria-label', `Clear comparison slot ${index + 1}`);
+      removeButton.addEventListener('click', event => { event.stopPropagation(); clearComparisonSlot(index); });
       controls.appendChild(removeButton);
+    } else {
+      const chooseButton = document.createElement('button');
+      chooseButton.type = 'button';
+      chooseButton.className = 'btn btn-small comparison-slot-target-button';
+      chooseButton.textContent = index === state.comparisonTargetSlot ? 'Selected' : '+';
+      chooseButton.title = `Select slot ${index + 1}`;
+      chooseButton.addEventListener('click', event => { event.stopPropagation(); setComparisonTargetSlot(index); });
+      controls.appendChild(chooseButton);
     }
     top.appendChild(controls);
     article.appendChild(top);
 
     if (!slot) {
-      const empty = document.createElement('div');
+      const empty = document.createElement('button');
+      empty.type = 'button';
       empty.className = 'comparison-slot-empty';
-      const icon = document.createElement('span');
-      icon.className = 'comparison-empty-icon';
-      icon.setAttribute('aria-hidden', 'true');
-      icon.textContent = '▧';
-      const strong = document.createElement('strong');
-      strong.textContent = `Slot ${index + 1} is empty`;
-      const hint = document.createElement('span');
-      hint.textContent = index === state.comparisonTargetSlot
-        ? 'Choose Add to slot on any stage preview to place an image here.'
-        : 'Select this slot, then add a stage preview to fill it.';
-      empty.append(icon, strong, hint);
+      empty.setAttribute('aria-label', `Select empty comparison slot ${index + 1}`);
+      empty.innerHTML = '<span class="comparison-empty-icon" aria-hidden="true">+</span><span class="comparison-empty-label">Add image</span>';
+      empty.addEventListener('click', event => { event.stopPropagation(); setComparisonTargetSlot(index); });
       article.appendChild(empty);
     } else {
-      const imageHeader = document.createElement('div');
-      imageHeader.className = 'comparison-image-header';
-      const label = document.createElement('strong');
-      label.textContent = slot.label;
-      const dimensions = document.createElement('span');
-      dimensions.className = 'comparison-dimensions';
-      dimensions.textContent = `${slot.width.toLocaleString()} × ${slot.height.toLocaleString()}`;
-      imageHeader.append(label, dimensions);
       const frame = document.createElement('div');
       frame.className = 'comparison-image-frame';
       const image = document.createElement('img');
       image.src = slot.objectUrl;
-      image.alt = `Comparison slot ${index + 1}: ${slot.label}`;
+      image.alt = `Slot ${index + 1}: ${slot.label}`;
+      image.loading = 'eager';
       frame.appendChild(image);
-      const footer = document.createElement('div');
-      footer.className = 'comparison-image-footer';
-      footer.textContent = `${slot.mediaType === 'video' ? `Video frame ${slot.frameIndex}` : 'Image'} · Branch: ${slot.branchName} · Full-resolution snapshot`;
-      article.append(imageHeader, frame, footer);
+      article.appendChild(frame);
     }
     grid.appendChild(article);
   }
 
-  if (!occupied) {
-    status.textContent = `No images yet. Slot ${state.comparisonTargetSlot + 1} is selected.`;
-  } else {
-    status.textContent = `${occupied} of 4 slots filled · Slot ${state.comparisonTargetSlot + 1} is ${target ? 'selected for replacement' : 'selected for the next image'}.`;
-  }
 }
 
 function imageDataToPngObjectUrl(imageData) {
@@ -260,6 +279,7 @@ async function addStageToComparison(stageKey) {
     }
     renderComparisonSlots();
     renderStagePreviewPanel();
+    if (typeof updateCompareSelectedNodeButton === 'function') updateCompareSelectedNodeButton();
     openComparisonWorkspace();
     showMsg(`Added ${stage.label} to comparison slot ${targetIndex + 1}.`);
   } catch (error) {
@@ -275,6 +295,75 @@ async function addStageToComparison(stageKey) {
   }
 }
 
+async function addGraphNodeToComparison(nodeData, openAfter = false) {
+  if (!nodeData || !cvReady || !state.mediaType || !state.mediaReady) {
+    showMsg('Load an image or wait for video frame extraction before comparing outputs.'); return;
+  }
+  if (isProcessing || isOpeningProject || isExportingFrames || isExtracting) {
+    showMsg('Wait for the current operation to finish before capturing a comparison image.'); return;
+  }
+  const sourceData = await getSourceData();
+  if (!sourceData) { showMsg('No source image or video frame is available.'); return; }
+  const mediaToken = mediaLoadId, frameIndex = state.currentFrameIndex, mediaType = state.mediaType;
+  const runBranch = (branch, pipeline = branch?.pipeline || []) => {
+    if (!branch) throw new Error('The branch for this node no longer exists.');
+    const canvas = document.createElement('canvas');
+    const result = runPipelineOnImageData(sourceData, canvas, clonePipeline(pipeline), false, null, branch.id);
+    canvas.width = 1; canvas.height = 1;
+    return result;
+  };
+  const mergeResult = () => {
+    const cfg = state.lastBranchMerge || {};
+    const target = state.branches.find(branch => branch.id === cfg.targetBranchId);
+    const source = state.branches.find(branch => branch.id === cfg.sourceBranchId);
+    if (!target || !source) throw new Error('Connect two branches before comparing the merge output.');
+    const targetData = runBranch(target);
+    const sourceImage = runBranch(source);
+    const blend = state.outputBlend && state.outputBlend.baseBranchId === target.id && state.outputBlend.sourceBranchId === source.id
+      ? state.outputBlend
+      : { operator: VALID_OUTPUT_MERGE_OPERATORS.includes(cfg.strategy) ? cfg.strategy : 'blend', mode: cfg.mode || 'normal', opacity: cfg.opacity ?? 0.5, threshold: cfg.threshold ?? 128, outputChoice: cfg.outputChoice || 'target' };
+    return mergeImageOutputs(targetData, sourceImage, blend);
+  };
+  let imageData, label = nodeData.label || 'Node output', branchId = nodeData.branch?.id || state.activeBranchId;
+  if (nodeData.kind === 'source') imageData = sourceData;
+  else if (nodeData.kind === 'step') {
+    const branch = state.branches.find(item => item.id === nodeData.branch?.id);
+    const index = (branch?.pipeline || []).findIndex(block => block.id === nodeData.block?.id);
+    if (index < 0) throw new Error('This processing step is no longer in the branch.');
+    imageData = runBranch(branch, branch.pipeline.slice(0, index + 1));
+  } else if (nodeData.kind === 'branch') {
+    const branch = state.branches.find(item => item.id === nodeData.branch?.id);
+    imageData = runBranch(branch);
+    label = `${branch?.name || 'Branch'} output`;
+  } else if (nodeData.kind === 'merge') {
+    imageData = mergeResult(); label = 'Merge output';
+    branchId = state.lastBranchMerge?.targetBranchId || branchId;
+  } else if (nodeData.kind === 'postMergeStep') {
+    imageData = mergeResult();
+    const downstream = state.lastBranchMerge?.downstreamPipeline || [];
+    const index = downstream.findIndex(block => block.id === nodeData.block?.id);
+    if (index < 0) throw new Error('This post-merge filter is no longer available.');
+    const canvas = document.createElement('canvas');
+    imageData = runPipelineOnImageData(imageData, canvas, clonePipeline(downstream.slice(0, index + 1)), false, null, branchId);
+    canvas.width = 1; canvas.height = 1;
+  } else throw new Error('This node output cannot be compared yet.');
+  if (mediaToken !== mediaLoadId || frameIndex !== state.currentFrameIndex || mediaType !== state.mediaType) {
+    throw new Error('The media changed while preparing the comparison image. Please try again.');
+  }
+  const objectUrl = await imageDataToPngObjectUrl(imageData);
+  const requested = Number.isInteger(state.comparisonTargetSlot) ? state.comparisonTargetSlot : 0;
+  const firstEmpty = state.comparisonSlots.findIndex(slot => !slot);
+  const targetIndex = !state.comparisonSlots[requested] ? requested : (firstEmpty >= 0 ? firstEmpty : requested);
+  if (state.comparisonSlots[targetIndex]?.objectUrl) URL.revokeObjectURL(state.comparisonSlots[targetIndex].objectUrl);
+  const branch = state.branches.find(item => item.id === branchId);
+  state.comparisonSlots[targetIndex] = { objectUrl, stageKey: nodeData.id, label, width: imageData.width, height: imageData.height, mediaType, frameIndex, branchId, branchName: branch?.name || 'Main' };
+  const nextEmpty = state.comparisonSlots.findIndex(slot => !slot);
+  state.comparisonTargetSlot = nextEmpty >= 0 ? nextEmpty : targetIndex;
+  renderComparisonSlots();
+  if (openAfter) openComparisonWorkspace();
+  showMsg(`Added ${label} to comparison slot ${targetIndex + 1}.`);
+}
+
 document.getElementById('btnOpenComparisonWorkspace').addEventListener('click', openComparisonWorkspace);
 document.getElementById('btnOpenComparisonFromMenu').addEventListener('click', () => {
   openComparisonWorkspace();
@@ -286,6 +375,8 @@ document.getElementById('btnToggleComparisonView').addEventListener('click', () 
   else openComparisonWorkspace();
 });
 document.getElementById('btnCloseComparisonWorkspace').addEventListener('click', closeComparisonWorkspace);
+const addComparisonSlotButton = document.getElementById('btnAddComparisonSlot');
+if (addComparisonSlotButton) addComparisonSlotButton.addEventListener('click', selectNextComparisonSlot);
 document.getElementById('btnDoneComparisonWorkspace').addEventListener('click', closeComparisonWorkspace);
 document.getElementById('btnClearComparisonSlot').addEventListener('click', () => clearComparisonSlot(state.comparisonTargetSlot));
 document.getElementById('comparisonTargetSlot').addEventListener('change', event => setComparisonTargetSlot(event.target.value));

@@ -158,3 +158,282 @@
 .node-workspace-port.input-port { left: -8px; }
 .node-workspace-port.output-port { right: -8px; }
 .node-workspace-wire.wire-preview { stroke: #60a5fa; stroke-width: 3; stroke-dasharray: 6 5; opacity: 1; }
+
+/* Issue 10 — use the node workspace as the only processing-graph surface. */
+.pipeline-area { display: none !important; }
+.branch-graph-area { height: 500px; min-height: 360px; }
+.node-workspace-branch-toolbar {
+  width: 100%; min-width: 0; min-height: 0; padding: 6px 8px;
+  border: 1px solid var(--line); border-radius: 7px; background: #0d1219;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  white-space: normal; overflow: visible;
+}
+.node-workspace-branch-toolbar .branch-merge-direction { flex: 1 1 180px; }
+.node-workspace-branch-toolbar .branch-name-input { width: 124px; }
+.node-workspace-branch-toolbar .branch-message { max-width: 180px; }
+.branch-graph-header { flex: 0 0 auto; }
+.branch-graph-scroll { flex: 1 1 auto; min-height: 180px; }
+.node-workspace-wires { display: block; }
+@media (max-width: 900px) {
+  .branch-graph-area { height: 520px; min-height: 380px; }
+  .node-workspace-branch-toolbar { align-items: flex-start; }
+  .node-workspace-branch-toolbar .branch-merge-direction { flex-basis: 100%; }
+}
+@media (min-height: 700px) {
+  .branch-graph-area { height: clamp(320px, 46vh, 430px); }
+}
+
+/* Issue 11 — compact, node-first workspace controls. Keep advanced controls in a popover
+   so the graph itself gets the available space and remains the main editing surface. */
+.branch-graph-area { height: auto; min-height: 0; flex: 1 1 auto; gap: 6px; }
+.branch-graph-header { position: relative; align-items: center; flex-wrap: wrap; gap: 8px; }
+.branch-graph-actions { flex: 1 1 auto; justify-content: flex-end; gap: 6px; }
+.workspace-active-branch { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted); font-size: 10px; white-space: nowrap; }
+.workspace-active-branch select,
+.workspace-merge-row select,
+.workspace-branch-edit-row input {
+  min-width: 100px; max-width: 190px; background: var(--bg); color: var(--text);
+  border: 1px solid var(--btn-border); border-radius: 5px; padding: 6px 8px; font-size: 11px;
+}
+.workspace-active-branch select { max-width: 150px; }
+.workspace-advanced { position: relative; flex: 0 0 auto; }
+.workspace-advanced > summary {
+  list-style: none; cursor: pointer; border: 1px solid var(--btn-border); border-radius: 6px;
+  background: var(--btn-bg); color: var(--text); padding: 6px 9px; font-size: 11px; white-space: nowrap;
+}
+.workspace-advanced > summary::-webkit-details-marker { display: none; }
+.workspace-advanced > summary::after { content: ' ▾'; color: var(--text-muted); }
+.workspace-advanced[open] > summary { border-color: var(--accent); }
+.workspace-advanced-panel {
+  position: absolute; z-index: 20; top: calc(100% + 7px); right: 0;
+  width: min(760px, calc(100vw - 36px)); max-height: min(62vh, 500px); overflow: auto;
+  display: flex; flex-direction: column; gap: 9px; padding: 11px;
+  border: 1px solid var(--line); border-radius: 9px; background: #111821;
+  box-shadow: 0 14px 36px rgba(0,0,0,.48);
+}
+.workspace-branch-edit-row, .workspace-merge-row { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+.workspace-branch-edit-row input { flex: 1 1 150px; }
+.workspace-merge-row > label { color: var(--text-muted); font-size: 11px; }
+.workspace-merge-row .merge-strategy-select { min-width: 190px !important; max-width: 240px; }
+.workspace-merge-row .branch-merge-direction { flex: 1 1 100%; }
+.workspace-advanced-panel .blend-options { flex-wrap: wrap; }
+.workspace-advanced-panel .branch-message { display: block; max-width: none; }
+.branch-graph-hint { flex: 1 1 100%; max-width: none; text-align: right; }
+.branch-graph-scroll { min-height: 0; flex: 1 1 auto; }
+body.node-workspace-open .bottom-area { flex: 0 1 58vh; min-height: 230px; max-height: 58vh; overflow: hidden; }
+body.node-workspace-open .branch-graph-area { flex: 1 1 auto; height: auto; min-height: 0; }
+body.node-workspace-open .stage-preview-area { flex: 0 0 104px; height: 104px; min-height: 96px; padding-top: 5px; padding-bottom: 5px; gap: 4px; }
+body.node-workspace-open .stage-preview-area .stage-preview-track { min-height: 0; overflow-x: auto; overflow-y: hidden; }
+body.node-workspace-open .stage-preview-area .stage-preview-thumb { height: 38px; min-height: 38px; }
+@media (max-width: 900px) {
+  .branch-graph-actions { justify-content: flex-start; }
+  .branch-graph-hint { text-align: left; }
+  .workspace-advanced-panel { right: auto; left: 0; }
+  body.node-workspace-open .bottom-area { flex-basis: 62vh; max-height: 62vh; }
+}
+@media (max-height: 650px) {
+  body.node-workspace-open .bottom-area { flex-basis: 56vh; max-height: 56vh; }
+  body.node-workspace-open .stage-preview-area { flex-basis: 84px; height: 84px; min-height: 80px; }
+  body.node-workspace-open .stage-preview-area .stage-preview-thumb { height: 30px; min-height: 30px; }
+}
+
+/* Issue 12 — workspace-first UI: no separate stage-preview strip; keep all workflow
+   controls inside the node workspace and give the graph the majority of the screen. */
+body.node-workspace-open .main-area {
+  flex: 0 1 42%;
+  min-height: 230px;
+}
+body.node-workspace-open .bottom-area {
+  flex: 1 1 58%;
+  min-height: 270px;
+  max-height: none;
+  overflow: hidden;
+}
+body.node-workspace-open .branch-graph-area {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  padding: 10px 12px 12px;
+  gap: 9px;
+  border-bottom: 0;
+}
+.branch-graph-header { display: flex; flex-direction: column; align-items: stretch; gap: 9px; }
+.branch-graph-heading { display: flex; align-items: baseline; gap: 12px; }
+.branch-graph-heading .timeline-title { font-size: 14px; font-weight: 750; letter-spacing: .01em; }
+.branch-graph-actions { display: flex; align-items: center; justify-content: flex-start; gap: 8px; flex-wrap: wrap; }
+.workspace-active-branch { padding: 5px 8px; border: 1px solid #2b3948; border-radius: 7px; background: #111923; }
+.workspace-active-branch select { max-width: 180px; min-width: 120px; font-size: 12px; }
+.workspace-menu { position: relative; flex: 0 0 auto; }
+.workspace-menu > summary {
+  list-style: none; cursor: pointer; user-select: none;
+  border: 1px solid #34465a; border-radius: 7px; background: #172332; color: #d9e8f8;
+  padding: 8px 12px; font-size: 12px; font-weight: 650; white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(0,0,0,.18);
+}
+.workspace-menu > summary::-webkit-details-marker { display: none; }
+.workspace-menu > summary::after { content: ''; }
+.workspace-menu[open] > summary, .workspace-menu > summary:hover { border-color: var(--accent); background: #1b2c40; }
+.workspace-menu-panel {
+  position: absolute; top: calc(100% + 7px); left: 0; z-index: 80;
+  display: flex; flex-direction: column; align-items: stretch; gap: 9px;
+  width: min(360px, calc(100vw - 32px)); max-height: min(62vh, 520px); overflow: auto;
+  padding: 13px; border: 1px solid #334456; border-radius: 10px;
+  background: #111923; color: var(--text); box-shadow: 0 18px 42px rgba(0,0,0,.56);
+}
+.merge-menu-panel { width: min(500px, calc(100vw - 32px)); }
+.workspace-menu-title { color: #e7f0fb; font-size: 12px; font-weight: 750; padding-bottom: 7px; border-bottom: 1px solid #293746; }
+.workspace-menu-note { margin: 0; color: var(--text-muted); font-size: 10px; line-height: 1.45; }
+.workspace-branch-edit-row { display: flex; gap: 6px; align-items: center; }
+.workspace-branch-edit-row input { flex: 1 1 auto; min-width: 0; max-width: none; width: auto; }
+.workspace-menu-panel .danger-outline { align-self: flex-start; }
+.workspace-merge-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.workspace-merge-row > label, .workspace-merge-strategy-label { color: var(--text-muted); font-size: 11px; }
+.workspace-merge-row select { flex: 1 1 180px; max-width: none; }
+.workspace-menu-panel .merge-strategy-select { width: 100%; min-width: 0 !important; max-width: none; }
+.workspace-menu-panel .branch-merge-direction { display: block; flex: 0 0 auto; width: 100%; }
+.workspace-menu-panel .blend-options { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px; }
+.workspace-menu-panel .blend-options[hidden] { display: none !important; }
+.workspace-menu-panel .merge-option-group { flex-wrap: wrap; }
+.workspace-menu-panel .branch-message { display: block; max-width: none; }
+.merge-apply-button { align-self: flex-start; min-width: 115px; }
+#btnCompareSelectedNodeOutput:disabled { opacity: .48; cursor: not-allowed; }
+.branch-graph-hint { flex: 0 0 auto; max-width: none; text-align: left; white-space: normal; font-size: 10px; line-height: 1.4; }
+.branch-graph-scroll { flex: 1 1 auto; min-height: 0; border-color: #293746; background-color: #080c12; background-image: radial-gradient(#283746 .9px, transparent .9px); background-size: 22px 22px; }
+.branch-graph-canvas { min-height: 100%; }
+@media (max-width: 900px) {
+  body.node-workspace-open .main-area { flex-basis: 38%; min-height: 205px; }
+  body.node-workspace-open .bottom-area { flex-basis: 62%; min-height: 250px; }
+  .branch-graph-actions { align-items: flex-start; }
+  .workspace-menu-panel { position: fixed; top: auto; left: 12px; right: 12px; width: auto; max-height: 55vh; }
+}
+@media (max-height: 620px) {
+  body.node-workspace-open .main-area { flex-basis: 36%; min-height: 180px; }
+  body.node-workspace-open .bottom-area { flex-basis: 64%; min-height: 220px; }
+}
+
+
+/* Issue 13 — merge settings live inside the selected merge node, not in a toolbar menu. */
+.merge-node-editor { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 5px; padding: 7px; overflow: auto; background: #0c1118; }
+.merge-node-editor .merge-node-control { display: grid; grid-template-columns: 88px minmax(0,1fr); align-items: center; gap: 7px; color: #aebed0; font-size: 9px; line-height: 1.2; }
+.merge-node-editor .merge-node-control[hidden] { display: none !important; }
+.merge-node-editor select { width: 100%; min-width: 0; border: 1px solid #34465a; border-radius: 4px; background: #121c28; color: #e5edf7; padding: 4px 5px; font-size: 10px; }
+.merge-node-editor input[type="range"] { width: 100%; min-width: 0; accent-color: #a78bfa; }
+.merge-node-option-fields { display: flex; flex-direction: column; gap: 5px; padding-top: 3px; border-top: 1px solid #283444; }
+.merge-node-editor .merge-node-opacity { grid-template-columns: 88px minmax(0,1fr) 34px; }
+.merge-node-editor .merge-node-opacity span, .merge-node-editor .merge-node-control span { color: #d6c6ff; font-size: 9px; text-align: right; }
+.merge-node-apply { align-self: flex-start; margin-top: 2px; }
+.merge-node .node-workspace-node-body { min-height: 0; }
+.merge-node .node-workspace-node-detail { white-space: normal; line-height: 1.3; }
+.merge-input-port { top: auto; }
+.merge-input-0 { top: 34% !important; }
+.merge-input-1 { top: 68% !important; }
+.node-workspace-wire.merge-input-target { stroke: #60a5fa; }
+.node-workspace-wire.merge-input-source { stroke: #bb8af7; }
+#btnAddMergeNode:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Issue 14 — compact merge preview and direct canvas mouse actions. */
+.merge-node-editor { display: flex; flex-direction: column; gap: 5px; padding: 5px; overflow: hidden; align-items: stretch; justify-content: flex-start; }
+.merge-node-preview { flex: 0 0 58px; min-height: 58px; max-height: 58px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #293746; border-radius: 5px; background: #070b10; color: #8d9bad; font-size: 9px; text-align: center; }
+.merge-node-preview img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.merge-node-preview span { padding: 4px 8px; }
+.merge-node-settings { display: flex; flex: 1 1 auto; min-height: 0; flex-direction: column; align-items: stretch; gap: 4px; overflow: auto; padding-right: 2px; }
+.merge-node-editor .merge-node-control { grid-template-columns: 66px minmax(0,1fr); gap: 5px; font-size: 9px; }
+.merge-node-editor select { padding: 3px 4px; font-size: 9px; }
+.merge-node-option-fields { gap: 3px; padding-top: 3px; }
+.merge-node-apply { min-height: 25px; padding: 4px 8px; font-size: 10px; }
+.merge-node .node-workspace-node-detail { min-height: 18px; padding-top: 3px; padding-bottom: 3px; font-size: 8px; }
+.node-workspace-wires .node-workspace-wire { pointer-events: stroke; cursor: context-menu; }
+.node-workspace-wires .node-workspace-wire:hover { stroke-width: 4; filter: drop-shadow(0 0 2px rgba(96,165,250,.6)); }
+.branch-graph-scroll.workspace-panning { cursor: grabbing; user-select: none; }
+.branch-graph-scroll.workspace-panning * { cursor: grabbing !important; }
+.node-context-menu { position: absolute; z-index: 50; width: 236px; max-height: min(420px, 70%); display: flex; flex-direction: column; gap: 3px; overflow: hidden; padding: 7px; border: 1px solid #3a4b60; border-radius: 8px; background: #111923; color: var(--text); box-shadow: 0 16px 40px rgba(0,0,0,.55); }
+.node-context-menu-title { padding: 4px 6px 7px; border-bottom: 1px solid #293746; font-size: 11px; font-weight: 750; }
+.node-context-menu-subtitle { padding: 5px 6px 2px; color: #9db0c4; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.node-context-operation-list { display: flex; flex-direction: column; gap: 2px; overflow: auto; min-height: 0; max-height: 185px; }
+.node-context-menu-item { display: block; width: 100%; flex: 0 0 auto; padding: 6px 7px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: #d7e3f0; text-align: left; font-size: 10px; cursor: pointer; }
+.node-context-menu-item:hover, .node-context-menu-item:focus-visible { border-color: #31547b; background: #1a2b3e; outline: none; }
+.node-context-menu-item.primary { background: #163a2b; border-color: #286548; color: #c7f7dc; }
+.node-context-menu-item.danger { color: #ffb4b4; }
+.node-context-menu-item.danger:hover { background: #3a1d24; border-color: #7f3340; }
+.node-context-menu-item.muted { color: #8493a5; border-top: 1px solid #293746; border-radius: 0; }
+@media (max-width: 900px) {
+  .node-context-menu { width: min(236px, calc(100vw - 30px)); }
+}
+
+
+/* Issue 15 — workspace-native branch actions and searchable extension picker. */
+.workspace-legacy-controls { display: none !important; }
+.branch-graph-actions { justify-content: flex-end; }
+.branch-node-editor { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 5px; padding: 6px; overflow: visible; background: #10221c; }
+.branch-node-editor .btn { width: 100%; min-height: 24px; padding: 4px 6px; font-size: 9px; }
+.branch-node-rename-row { display: flex; gap: 4px; min-width: 0; }
+.branch-node-rename-row input { flex: 1 1 auto; min-width: 0; width: 80px; border: 1px solid #315f4b; border-radius: 4px; background: #0a1712; color: #e6fff1; padding: 4px; font-size: 9px; }
+.node-filter-search { width: 100%; min-height: 30px; padding: 6px 8px; border: 1px solid #34465a; border-radius: 5px; background: #0b1118; color: #e5edf7; font-size: 11px; }
+.node-context-operation-list { overflow: auto; min-height: 0; max-height: 240px; }
+.node-context-menu-empty { padding: 10px 7px; color: #9aabba; font-size: 10px; }
+.node-workspace-node.merge-node.selected { height: auto; }
+.merge-node-editor { max-height: 142px; overflow-y: auto; }
+.merge-node-preview { height: 42px; min-height: 42px; }
+.merge-node-preview img { max-height: 42px; object-fit: contain; }
+.merge-output-port { top: calc(50% - 7px); right: -8px; left: auto; }
+.node-workspace-wire.merge-output-wire { stroke: #c084fc; stroke-width: 3; }
+
+/* Issue 16 — branch nodes are editable in-place and their output can be extended. */
+.branch-inline-name-input {
+  display: block; width: 100%; min-width: 0; box-sizing: border-box;
+  border: 1px solid #315f4b; border-radius: 5px; background: #0a1712;
+  color: #e6fff1; padding: 5px 6px; font-size: 10px; outline: none;
+}
+.branch-inline-name-input:focus { border-color: #38b878; box-shadow: 0 0 0 2px rgba(56,184,120,.16); }
+.branch-inline-name-input:invalid { border-color: #e08a8a; }
+.branch-node .node-workspace-port.output-port { border-color: #4eaa80; }
+
+/* Issue 17 — larger, easier-to-read stage thumbnails in graph nodes. */
+.node-workspace-node-body { min-height: 0; }
+.node-workspace-node-body img { width: 100%; height: 100%; min-height: 0; object-fit: contain; padding: 2px; }
+.node-workspace-node:not(.branch-node) { min-width: 220px; }
+.node-workspace-node:not(.branch-node) .node-workspace-node-body { min-height: 68px; }
+.node-workspace-node:not(.branch-node) .node-workspace-node-head { min-height: 32px; }
+.node-workspace-node:not(.branch-node) .node-workspace-node-detail { min-height: 22px; font-size: 10px; }
+.merge-node .node-workspace-node-body { min-height: 0; }
+.merge-node .merge-node-preview { min-height: 64px; max-height: 74px; }
+
+
+/* Issue 18 — larger node previews and direct compare actions. */
+.node-workspace-node:not(.branch-node) { min-width: 250px; }
+.node-workspace-node:not(.branch-node) .node-workspace-node-body { min-height: 96px; }
+.node-workspace-node-body img { object-fit: contain; }
+.node-workspace-node-actions { display: flex; align-items: center; gap: 5px; padding: 4px 6px 6px; border-top: 1px solid rgba(255,255,255,.06); background: rgba(0,0,0,.12); }
+.node-workspace-node-actions .btn { min-height: 22px; padding: 3px 7px; font-size: 9px; flex: 1 1 0; white-space: nowrap; }
+.node-workspace-node-actions .node-output-compare { border-color: #345e86; }
+.node-workspace-node-actions .node-output-add-slot { border-color: #28654b; color: #b9f4d4; }
+.branch-node .node-workspace-node-actions { padding-top: 3px; }
+.branch-node .node-workspace-node-actions .btn { font-size: 9px; }
+
+/* Draggable horizontal divider lets the user allocate more room to the image or graph. */
+#workspaceSplitHandle { height: 8px; flex: 0 0 8px; cursor: ns-resize; position: relative; z-index: 35; background: #101720; border-top: 1px solid #293746; border-bottom: 1px solid #293746; touch-action: none; }
+#workspaceSplitHandle::after { content: ''; position: absolute; width: 56px; height: 3px; left: 50%; top: 50%; transform: translate(-50%, -50%); border-radius: 4px; background: #60758a; }
+#workspaceSplitHandle:hover, #workspaceSplitHandle:focus-visible { background: #1b2a3a; outline: none; }
+#workspaceSplitHandle:hover::after, #workspaceSplitHandle:focus-visible::after { background: #60a5fa; width: 84px; }
+body.workspace-resizing { cursor: ns-resize !important; user-select: none !important; }
+body.workspace-resizing * { cursor: ns-resize !important; user-select: none !important; }
+
+/* Issue 19 — compact workspace header; keep more of the screen for the graph. */
+body.node-workspace-open .branch-graph-area { padding: 5px 8px 7px !important; gap: 4px !important; }
+body.node-workspace-open .branch-graph-header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 8px !important;
+  row-gap: 2px !important;
+}
+body.node-workspace-open .branch-graph-heading { grid-column: 1; grid-row: 1; gap: 8px; min-height: 22px; }
+body.node-workspace-open .branch-graph-actions { grid-column: 2; grid-row: 1; justify-content: flex-end; gap: 5px; }
+body.node-workspace-open .branch-graph-actions .btn { min-height: 23px; padding: 3px 7px; font-size: 10px; }
+body.node-workspace-open .branch-graph-hint { display: none !important; }
+body.node-workspace-open .branch-graph-scroll { min-height: 0; }
+#workspaceSplitHandle { height: 10px; flex-basis: 10px; background: #141e29; }
+#workspaceSplitHandle::after { width: 76px; height: 4px; }
+#workspaceSplitHandle:hover::after, #workspaceSplitHandle:focus-visible::after { width: 110px; }
