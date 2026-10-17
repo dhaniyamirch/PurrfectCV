@@ -14,6 +14,9 @@ document.getElementById('mediaUpload').addEventListener('change', async (e) => {
   state.fileName = file.name;
   state.sourceMediaFile = file;
   state.mediaType = null;
+  state.mediaReady = false;
+  state.timelineCollapsed = false;
+  syncMediaDependentUI({ resetTimeline: true });
   resetAnnotations();
   state.frames = [];
   state.currentFrameIndex = 0;
@@ -22,7 +25,6 @@ document.getElementById('mediaUpload').addEventListener('change', async (e) => {
   state.fitOnNextRender = false;
   els.ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
   els.timeline.innerHTML = '<div class="timeline-empty-message">Loading media…</div>';
-  document.getElementById('btnExportAll').style.display = 'none';
   document.getElementById('btnExportAll').disabled = true;
 
   try {
@@ -42,6 +44,8 @@ document.getElementById('mediaUpload').addEventListener('change', async (e) => {
       setStatus('Media could not be loaded.');
       disposeCurrentMedia();
       state.mediaType = null;
+      state.mediaReady = false;
+      syncMediaDependentUI({ resetTimeline: true });
       renderTimeline();
     }
   } finally {
@@ -78,6 +82,8 @@ async function loadImage(file, token) {
     if (token !== mediaLoadId) return;
 
     state.mediaType = 'image';
+    state.mediaReady = true;
+    state.timelineCollapsed = false;
     state.activeStageKey = null; state.activeStageView = null; state.activeStageData = null; updateStageViewControls();
     state.stagePreviews = [];
     renderStagePreviewPanel();
@@ -85,9 +91,9 @@ async function loadImage(file, token) {
     state.sourceImage = img;
     state.frames = [];
     state.currentFrameIndex = 0;
-    document.getElementById('btnExportAll').style.display = 'none';
     document.getElementById('btnExportAll').disabled = true;
     setStatus(`Image: ${img.naturalWidth}×${img.naturalHeight}`);
+    syncMediaDependentUI({ resetTimeline: true });
     renderTimeline();
     state.fitOnNextRender = true;
     requestProcess();
@@ -138,11 +144,12 @@ async function loadVideo(file, token, signal) {
   }
 
   state.mediaType = 'video';
+  state.mediaReady = false;
+  state.timelineCollapsed = false;
   state.activeStageKey = null; state.activeStageView = null; state.activeStageData = null; updateStageViewControls();
   state.stagePreviews = [];
   renderStagePreviewPanel();
   resetBranchesForNewMedia();
-  document.getElementById('btnExportAll').style.display = 'inline-flex';
   document.getElementById('btnExportAll').disabled = true;
   setStatus(`Video: ${video.videoWidth}×${video.videoHeight}, Duration: ${video.duration.toFixed(2)}s`);
   await extractFrames(signal, token);
@@ -254,6 +261,8 @@ async function extractFrames(signal, token = mediaLoadId) {
     state.frames = [];
   } finally {
     isExtracting = false;
+    if (state.mediaType === 'video' && video === state.videoEl) state.mediaReady = true;
+    syncMediaDependentUI();
   }
 }
 
@@ -268,6 +277,7 @@ function renderTimeline() {
     document.getElementById('timelineStatus').textContent = '';
     document.getElementById('frameCounter').textContent = '0 / 0';
   }
+  syncMediaDependentUI();
 }
 
 function updateTimelineUI() {

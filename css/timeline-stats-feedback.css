@@ -35,7 +35,8 @@ canvas#histCanvas { width: 100%; height: 100px; background: #090c10; border: 1px
 .export-all-button { display: none; }
 .upload-panel { padding: 12px; border-bottom: 1px solid var(--line); }
 .upload-icon { display: block; font-size: 18px; margin-bottom: 4px; }
-.pan-hint { font-size: 11px; color: var(--text-muted); margin-right: 12px; }
+.pan-hint { font-size: 11px; color: var(--text-muted);margin: 0 8px; white-space: nowrap; }
+.toolbar-spacer { flex: 1; }
 .inspector-panel { padding: 16px; border-bottom: 1px solid var(--line); flex: 1; }
 .panel-title-small { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 12px; }
 .inspector-empty { color: var(--text-muted); font-size: 12px; text-align: center; padding: 20px 0; line-height: 1.5; }

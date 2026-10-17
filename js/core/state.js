@@ -6,7 +6,7 @@ let cvReady = false;
 
 // Global state
 let state = {
-  mediaType: null, fileName: '', sourceMediaFile: null, sourceImage: null, videoEl: null, mediaObjectUrl: null, frames: [], currentFrameIndex: 0,
+  mediaType: null, mediaReady: false, timelineCollapsed: false, fileName: '', sourceMediaFile: null, sourceImage: null, videoEl: null, mediaObjectUrl: null, frames: [], currentFrameIndex: 0,
   pipeline: [], selectedBlockId: null,
   branches: [], activeBranchId: null, outputBlend: null,
   viewMode: 'processed', zoomLevel: 1.0, panX: 0, panY: 0, splitPosition: 0.5,

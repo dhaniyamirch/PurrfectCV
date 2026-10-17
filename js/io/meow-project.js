@@ -359,6 +359,10 @@ async function openMeowProject(file) {
     extractionAbort = new AbortController();
     const token = ++mediaLoadId;
     disposeCurrentMedia();
+    state.mediaType = null;
+    state.mediaReady = false;
+    state.timelineCollapsed = false;
+    syncMediaDependentUI({ resetTimeline: true });
     state.mediaType = project.media.kind;
     resetAnnotations();
     state.annotations = cloneAnnotations(project.workspace.annotations || []);
@@ -388,9 +392,11 @@ async function openMeowProject(file) {
     if (project.media.kind === 'image') {
       state.sourceImage = prepared.image;
       state.videoEl = null;
+      state.mediaReady = true;
     } else {
       state.sourceImage = null;
       state.videoEl = prepared.video;
+      state.mediaReady = false;
     }
     // The object URL is now owned by state; do not let cleanup below revoke it.
     prepared = null;
@@ -408,14 +414,14 @@ async function openMeowProject(file) {
     renderPipelineUI();
 
     if (state.mediaType === 'image') {
-      document.getElementById('btnExportAll').style.display = 'none';
       document.getElementById('btnExportAll').disabled = true;
+      syncMediaDependentUI({ resetTimeline: true });
       setStatus(`Project image: ${state.sourceImage.naturalWidth}×${state.sourceImage.naturalHeight}`);
       renderTimeline();
       requestProcess();
     } else {
-      document.getElementById('btnExportAll').style.display = 'inline-flex';
       document.getElementById('btnExportAll').disabled = true;
+      syncMediaDependentUI({ resetTimeline: true });
       setStatus(`Project video: ${state.videoEl.videoWidth}×${state.videoEl.videoHeight}, ${state.videoEl.duration.toFixed(2)}s`);
       await extractFrames(extractionAbort.signal, token);
       if (token !== mediaLoadId) return;

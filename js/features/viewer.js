@@ -34,13 +34,43 @@ function fitCanvasToViewer() {
   applyZoom();
 }
 
+// Re-centre the current image after the viewer's available area changes, without
+// discarding the user's current zoom level.
+function centerCanvasAtCurrentZoom() {
+  if ((!state.sourceImage && !state.videoEl) || !els.canvas.width || !els.canvas.height) return;
+  state.panX = (els.viewerContainer.clientWidth - (els.canvas.width * state.zoomLevel)) / 2;
+  state.panY = (els.viewerContainer.clientHeight - (els.canvas.height * state.zoomLevel)) / 2;
+  applyZoom();
+}
+
+function setZoomLevel(nextZoom) {
+  const currentZoom = Math.max(0.05, Number(state.zoomLevel) || 1);
+  const zoom = Math.min(8, Math.max(0.05, Number(nextZoom) || 1));
+  const ratio = zoom / currentZoom;
+  // Zoom around the viewer's centre rather than letting the image drift toward a corner.
+  const centerX = els.viewerContainer.clientWidth / 2;
+  const centerY = els.viewerContainer.clientHeight / 2;
+  state.panX = centerX + (state.panX - centerX) * ratio;
+  state.panY = centerY + (state.panY - centerY) * ratio;
+  state.zoomLevel = zoom;
+  applyZoom();
+}
+
 document.getElementById('btnFit').addEventListener('click', fitCanvasToViewer);
-document.getElementById('btnZoomIn').addEventListener('click', () => { state.zoomLevel = Math.min(8, state.zoomLevel * 1.2); applyZoom(); });
-document.getElementById('btnZoomOut').addEventListener('click', () => { state.zoomLevel = Math.max(0.05, state.zoomLevel / 1.2); applyZoom(); });
+document.getElementById('btnZoomIn').addEventListener('click', () => setZoomLevel(state.zoomLevel * 1.2));
+document.getElementById('btnZoomOut').addEventListener('click', () => setZoomLevel(state.zoomLevel / 1.2));
 
 function applyZoom() {
-  const transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoomLevel})`;
-  els.canvasWrapper.style.transform = transform;
+  // The wrapper is centre-aligned by flexbox. state.panX/panY describe the desired
+  // top-left image position, so subtract its untransformed flex position to avoid
+  // applying the centring offset twice (the source of the image drifting off-centre).
+  const layoutLeft = (els.viewerContainer.clientWidth - els.canvasWrapper.offsetWidth) / 2;
+  const layoutTop = (els.viewerContainer.clientHeight - els.canvasWrapper.offsetHeight) / 2;
+  const translateX = state.panX - layoutLeft;
+  const translateY = state.panY - layoutTop;
+  els.canvasWrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${state.zoomLevel})`;
+  const zoomLabel = document.getElementById('zoomLevelLabel');
+  if (zoomLabel) zoomLabel.textContent = `${Math.round(state.zoomLevel * 100)}%`;
 }
 
 function calculateStats(imgData) {

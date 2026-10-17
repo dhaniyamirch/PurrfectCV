@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="css/stage-previews.css">
   <link rel="stylesheet" href="css/comparison.css">
   <link rel="stylesheet" href="css/annotations.css">
+  <link rel="stylesheet" href="css/menus.css">
   <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="window.__cvScriptLoaded = true; if (window.onOpenCvReady) window.onOpenCvReady();" onerror="window.__cvScriptFailed = true; if (window.onOpenCvScriptFailed) window.onOpenCvScriptFailed();" type="text/javascript"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script defer src="js/core/config.js"></script>
@@ -44,132 +45,56 @@
 </div>
 
 <div class="app-layout">
-  <div class="top-bar">
-    <h1>Meow — Visual Processing Editor</h1>
-    <div class="toolbar-separator"></div>
-    <div class="status-text-inline" id="statusText">Awaiting OpenCV...</div>
-    <div class="toolbar-spacer"></div>
-    <button class="btn" id="btnUndo" disabled>↺ Undo</button>
-    <button class="btn" id="btnRedo" disabled>↻ Redo</button>
-    <div class="toolbar-separator"></div>
-    <button class="btn" id="btnLoadProject" title="Open a complete .meow project">📦 Open Project</button>
-    <button class="btn primary" id="btnSaveProject" title="Save the media and workspace as a .meow project">💾 Save Project</button>
-    <div class="toolbar-separator"></div>
-    <button class="btn" id="btnLoadPipe">📂 Load Pipeline</button>
-    <button class="btn" id="btnSavePipe">💾 Save Pipeline</button>
-    <button class="btn" id="btnClearPipe">🗑 Clear</button>
-    <div class="toolbar-separator"></div>
-    <button class="btn primary" id="btnSaveImg">⬇ Save Frame</button>
-    <button class="btn primary export-all-button" id="btnExportAll" style="display:none" disabled>⬇ Export All Frames</button>
-  </div>
+  <header class="top-bar">
+    <h1>Meow <span>Visual Processing Editor</span></h1>
+    <nav class="app-menu-bar" aria-label="Main menu">
+      <details class="menu-dropdown" id="fileMenu">
+        <summary>File</summary>
+        <div class="menu-panel" role="group" aria-label="File actions">
+          <button class="btn menu-item" id="btnOpenMediaMenu" type="button">📁 Open Media…</button>
+          <div class="menu-separator"></div>
+          <button class="btn menu-item" id="btnLoadProject" type="button" title="Open a complete .meow project">📦 Open Project…</button>
+          <button class="btn menu-item" id="btnSaveProject" type="button" title="Save the media and workspace as a .meow project">💾 Save Project</button>
+          <div class="menu-separator"></div>
+          <button class="btn menu-item" id="btnLoadPipe" type="button">📂 Load Pipeline…</button>
+          <button class="btn menu-item" id="btnSavePipe" type="button">💾 Save Pipeline…</button>
+          <div class="menu-separator"></div>
+          <button class="btn menu-item" id="btnSaveImg" type="button">⬇ Save Frame as PNG</button>
+          <button class="btn menu-item" id="btnExportAll" type="button" data-video-only hidden disabled>⬇ Export All Frames as ZIP</button>
+        </div>
+      </details>
 
-  <div class="main-area">
-    <div class="side-panel">
-      <div class="upload-panel">
-        <div class="file-drop">
-          <label for="mediaUpload">
-            <span class="upload-icon">📁</span> 
-            Open Media (Image/Video)
-          </label>
-          <input type="file" id="mediaUpload" accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime" />
+      <details class="menu-dropdown" id="editMenu">
+        <summary>Edit</summary>
+        <div class="menu-panel" role="group" aria-label="Edit actions">
+          <button class="btn menu-item" id="btnUndo" type="button" disabled>↺ Undo Pipeline</button>
+          <button class="btn menu-item" id="btnRedo" type="button" disabled>↻ Redo Pipeline</button>
+          <div class="menu-separator"></div>
+          <button class="btn menu-item" id="btnClearPipe" type="button">🗑 Clear Pipeline</button>
+          <div class="menu-separator"></div>
+          <div class="menu-section-label">Annotations</div>
+          <button class="btn menu-item" id="btnUndoAnnotation" type="button" disabled>Undo Annotation</button>
+          <button class="btn menu-item" id="btnRedoAnnotation" type="button" disabled>Redo Annotation</button>
+          <button class="btn menu-item" id="btnDeleteAnnotation" type="button" disabled>Delete Selected Annotation</button>
+          <button class="btn menu-item" id="btnClearAnnotations" type="button" disabled>Clear All Annotations</button>
         </div>
-      </div>
-      <div class="tools-container" id="toolsContainer">
-        <!-- Tools injected via JS -->
-      </div>
-    </div>
+      </details>
 
-    <div class="center-area">
-      <div class="viewer-toolbar">
-        <div class="btn-group">
-          <button class="btn active" data-view="processed">Processed</button>
-          <button class="btn" data-view="original">Original</button>
-          <button class="btn" data-view="split">Side-by-side</button>
+      <details class="menu-dropdown" id="viewMenu">
+        <summary>View</summary>
+        <div class="menu-panel" role="group" aria-label="View options">
+          <button class="btn menu-item" id="btnToggleToolsPanel" type="button" aria-pressed="true">Hide Processing Tools</button>
+          <button class="btn menu-item" id="btnToggleInspectorPanel" type="button" aria-pressed="true">Hide Block Inspector</button>
+          <button class="btn menu-item" id="btnToggleStatsPanel" type="button" aria-pressed="true">Hide Statistics</button>
+          <button class="btn menu-item" id="btnToggleStagePreviews" type="button" aria-pressed="true">Hide Stage Previews</button>
+          <button class="btn menu-item" id="btnToggleTimeline" type="button" data-video-only hidden aria-pressed="true">Hide Video Timeline</button>
         </div>
-        <span class="stage-view-status" id="stageViewStatus" hidden></span>
-        <button class="btn stage-return-button" id="btnReturnFinalStage" hidden title="Return to the final pipeline output">↩ Final output</button>
-        <div class="toolbar-spacer"></div>
-        <div class="pan-hint">Right-click &amp; drag to pan</div>
-        <button class="btn" id="btnFit">Zoom 1:1</button>
-        <button class="btn" id="btnZoomIn">➕</button>
-        <button class="btn" id="btnZoomOut">➖</button>
-      </div>
-      <div class="annotation-toolbar" aria-label="Basic image annotations">
-        <span class="annotation-toolbar-title">Annotations</span>
-        <button class="btn annotation-mode-button" id="btnAnnotationMode" type="button" aria-pressed="false" disabled>Enable drawing</button>
-        <label class="annotation-control" for="annotationTool">Tool
-          <select id="annotationTool" aria-label="Annotation drawing and editing tool">
-            <option value="select">Select / edit</option>
-            <option value="pen">Freehand</option>
-            <option value="line">Line</option>
-            <option value="arrow">Arrow</option>
-            <option value="rectangle">Rectangle</option>
-            <option value="ellipse">Ellipse</option>
-            <option value="marker">Point marker</option>
-            <option value="text">Text label</option>
-          </select>
-        </label>
-        <label class="annotation-control" for="annotationColor">Color
-          <input id="annotationColor" type="color" value="#ffcc00" aria-label="Annotation color">
-        </label>
-        <label class="annotation-control annotation-width-control" for="annotationWidth">Width
-          <input id="annotationWidth" type="range" min="1" max="20" step="1" value="3" aria-label="Annotation stroke width">
-          <span id="annotationWidthValue">3 px</span>
-        </label>
-        <label class="annotation-control annotation-text-control" for="annotationText" hidden>Label
-          <input id="annotationText" type="text" maxlength="120" value="Label" placeholder="Enter label" aria-label="Text label content">
-        </label>
-        <label class="annotation-control annotation-text-control" for="annotationTextSize" hidden>Text size
-          <input id="annotationTextSize" type="range" min="8" max="72" step="1" value="24" aria-label="Text label size">
-          <span id="annotationTextSizeValue">24 px</span>
-        </label>
-        <label class="annotation-control annotation-text-control" for="annotationTextBackground" hidden>
-          <input id="annotationTextBackground" type="checkbox" checked aria-label="Show text label background"> Background
-        </label>
-        <label class="annotation-control annotation-text-control" for="annotationBackgroundColor" hidden>BG color
-          <input id="annotationBackgroundColor" type="color" value="#111827" aria-label="Text label background color">
-        </label>
-        <button class="btn btn-small" id="btnUndoAnnotation" type="button" disabled>Undo</button>
-        <button class="btn btn-small" id="btnRedoAnnotation" type="button" disabled>Redo</button>
-        <button class="btn btn-small" id="btnDeleteAnnotation" type="button" disabled>Delete selected</button>
-        <button class="btn btn-small" id="btnClearAnnotations" type="button" disabled>Clear marks</button>
-        <span class="annotation-hint" id="annotationHint" role="status" aria-live="polite">Load media, then enable drawing.</span>
-      </div>
-      <div class="viewer-container" id="viewerContainer">
-        <div class="canvas-wrapper" id="canvasWrapper">
-          <canvas id="mainCanvas"></canvas>
-          <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
-          <div class="split-handle" id="splitHandle"></div>
-        </div>
-        <div class="loading-overlay" id="renderOverlay">
-          <div class="spinner"></div>
-          <div id="renderText">Processing Pipeline...</div>
-        </div>
-      </div>
-    </div>
+      </details>
 
-    <div class="side-panel right">
-      <div class="inspector-panel" id="inspectorPanel">
-        <div class="panel-title-small">BLOCK INSPECTOR</div>
-        <div id="inspectorContent" class="inspector-empty">
-          Select a block in the processing pipeline below to edit its parameters.
-        </div>
-      </div>
-      <div class="stats-panel">
-        <div class="panel-title-small">STATISTICS</div>
-        <canvas id="histCanvas"></canvas>
-        <div class="stat-grid">
-          <div class="stat-box"><span class="stat-val" id="statMean">-</span><span class="stat-lbl">Mean</span></div>
-          <div class="stat-box"><span class="stat-val" id="statStd">-</span><span class="stat-lbl">Std Dev</span></div>
-          <div class="stat-box"><span class="stat-val" id="statMin">-</span><span class="stat-lbl">Min</span></div>
-          <div class="stat-box"><span class="stat-val" id="statMax">-</span><span class="stat-lbl">Max</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="bottom-area">
-    <div class="branch-toolbar" id="branchToolbar" aria-label="Processing branches">
+      <details class="menu-dropdown menu-branches-dropdown" id="branchesMenu">
+        <summary>Branches</summary>
+        <div class="menu-panel branch-menu-panel" role="group" aria-label="Branch controls">
+          <div class="branch-toolbar" id="branchToolbar" aria-label="Processing branches">
       <div class="branch-field branch-picker-field">
         <label for="branchSelect">Branch</label>
         <select id="branchSelect" title="Switch the active processing branch"></select>
@@ -205,6 +130,144 @@
       <button class="btn primary btn-small" id="btnMergeBranch" title="Merge the selected source branch into the active branch">Merge</button>
       <span class="branch-message" id="branchMessage" role="status"></span>
     </div>
+        </div>
+      </details>
+
+      <details class="menu-dropdown" id="settingsMenu">
+        <summary>Settings</summary>
+        <div class="menu-panel settings-menu-panel" role="group" aria-label="Editor settings">
+          <div class="menu-setting-block">
+            <label class="extract-fps-label" for="fpsExtract">Default video extraction FPS
+              <input type="number" id="fpsExtract" class="fps-input" value="5" min="1" max="30">
+            </label>
+            <p>Number of frames sampled per second when a video is loaded.</p>
+          </div>
+          <div class="menu-separator"></div>
+          <button class="btn menu-item" id="btnResetPanels" type="button">Restore Default Panel Layout</button>
+        </div>
+      </details>
+
+      <details class="menu-dropdown" id="helpMenu">
+        <summary>Help</summary>
+        <div class="menu-panel" role="group" aria-label="Help actions">
+          <button class="btn menu-item" id="btnAboutMeow" type="button">About Meow</button>
+          <a class="menu-link" href="README.md" target="_blank" rel="noopener">Open Project README</a>
+          <a class="menu-link" href="tasklist.md" target="_blank" rel="noopener">Development Tasklist</a>
+        </div>
+      </details>
+    </nav>
+    <div class="toolbar-spacer"></div>
+    <div class="status-text-inline" id="statusText" role="status" aria-live="polite">Awaiting OpenCV...</div>
+  </header>
+
+  <div class="main-area">
+    <div class="side-panel" id="toolsPanel">
+      <div class="upload-panel">
+        <div class="file-drop">
+          <label for="mediaUpload">
+            <span class="upload-icon">📁</span> 
+            Open Media (Image/Video)
+          </label>
+          <input type="file" id="mediaUpload" accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime" />
+        </div>
+      </div>
+      <div class="tools-container" id="toolsContainer">
+        <!-- Tools injected via JS -->
+      </div>
+    </div>
+
+    <div class="center-area">
+      <div class="viewer-toolbar">
+        <div class="btn-group">
+          <button class="btn active" data-view="processed">Processed</button>
+          <button class="btn" data-view="original">Original</button>
+          <button class="btn" data-view="split">Side-by-side</button>
+        </div>
+        <button class="btn annotation-panel-toggle" id="btnToggleAnnotationPanel" type="button" aria-expanded="false" aria-controls="annotationToolbarPanel">Annotations ▾</button>
+        <span class="stage-view-status" id="stageViewStatus" hidden></span>
+        <button class="btn stage-return-button" id="btnReturnFinalStage" hidden title="Return to the final pipeline output">↩ Final output</button>
+        <div class="toolbar-spacer"></div>
+        <div class="pan-hint">Right-click &amp; drag to pan</div>
+        <div class="viewer-zoom-controls" role="group" aria-label="Image zoom controls">
+          <button class="btn zoom-fit-button" id="btnFit" type="button" title="Fit the image in the viewer">Fit</button>
+          <button class="btn zoom-step-button" id="btnZoomOut" type="button" title="Zoom out" aria-label="Zoom out">−</button>
+          <span class="zoom-level-label" id="zoomLevelLabel" aria-live="polite">100%</span>
+          <button class="btn zoom-step-button" id="btnZoomIn" type="button" title="Zoom in" aria-label="Zoom in">＋</button>
+        </div>
+      </div>
+      <div class="annotation-toolbar-panel" id="annotationToolbarPanel" hidden>
+        <div class="annotation-toolbar" aria-label="Basic image annotation tools">
+        <span class="annotation-toolbar-title">Annotations</span>
+        <button class="btn annotation-mode-button" id="btnAnnotationMode" type="button" aria-pressed="false" disabled>Enable drawing</button>
+        <label class="annotation-control" for="annotationTool">Tool
+          <select id="annotationTool" aria-label="Annotation drawing and editing tool">
+            <option value="select">Select / edit</option>
+            <option value="pen">Freehand</option>
+            <option value="line">Line</option>
+            <option value="arrow">Arrow</option>
+            <option value="rectangle">Rectangle</option>
+            <option value="ellipse">Ellipse</option>
+            <option value="marker">Point marker</option>
+            <option value="text">Text label</option>
+          </select>
+        </label>
+        <label class="annotation-control" for="annotationColor">Color
+          <input id="annotationColor" type="color" value="#ffcc00" aria-label="Annotation color">
+        </label>
+        <label class="annotation-control annotation-width-control" for="annotationWidth">Width
+          <input id="annotationWidth" type="range" min="1" max="20" step="1" value="3" aria-label="Annotation stroke width">
+          <span id="annotationWidthValue">3 px</span>
+        </label>
+        <label class="annotation-control annotation-text-control" for="annotationText" hidden>Label
+          <input id="annotationText" type="text" maxlength="120" value="Label" placeholder="Enter label" aria-label="Text label content">
+        </label>
+        <label class="annotation-control annotation-text-control" for="annotationTextSize" hidden>Text size
+          <input id="annotationTextSize" type="range" min="8" max="72" step="1" value="24" aria-label="Text label size">
+          <span id="annotationTextSizeValue">24 px</span>
+        </label>
+        <label class="annotation-control annotation-text-control" for="annotationTextBackground" hidden>
+          <input id="annotationTextBackground" type="checkbox" checked aria-label="Show text label background"> Background
+        </label>
+        <label class="annotation-control annotation-text-control" for="annotationBackgroundColor" hidden>BG color
+          <input id="annotationBackgroundColor" type="color" value="#111827" aria-label="Text label background color">
+        </label>
+        <span class="annotation-hint" id="annotationHint" role="status" aria-live="polite">Load media, then enable drawing.</span>
+        </div>
+      </div>
+      <div class="viewer-container" id="viewerContainer">
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="mainCanvas"></canvas>
+          <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
+          <div class="split-handle" id="splitHandle"></div>
+        </div>
+        <div class="loading-overlay" id="renderOverlay">
+          <div class="spinner"></div>
+          <div id="renderText">Processing Pipeline...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-panel right" id="rightPanel">
+      <div class="inspector-panel" id="inspectorPanel">
+        <div class="panel-title-small">BLOCK INSPECTOR</div>
+        <div id="inspectorContent" class="inspector-empty">
+          Select a block in the processing pipeline below to edit its parameters.
+        </div>
+      </div>
+      <div class="stats-panel" id="statsPanel">
+        <div class="panel-title-small">STATISTICS</div>
+        <canvas id="histCanvas"></canvas>
+        <div class="stat-grid">
+          <div class="stat-box"><span class="stat-val" id="statMean">-</span><span class="stat-lbl">Mean</span></div>
+          <div class="stat-box"><span class="stat-val" id="statStd">-</span><span class="stat-lbl">Std Dev</span></div>
+          <div class="stat-box"><span class="stat-val" id="statMin">-</span><span class="stat-lbl">Min</span></div>
+          <div class="stat-box"><span class="stat-val" id="statMax">-</span><span class="stat-lbl">Max</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-area">
     <div class="pipeline-area" id="pipelineArea"></div>
     <section class="stage-preview-area" aria-label="Processing stage previews">
       <div class="stage-preview-header">
@@ -219,7 +282,7 @@
         <div class="stage-preview-empty">Load an image or video to preview the source and each processing stage.</div>
       </div>
     </section>
-    <div class="timeline-area">
+    <div class="timeline-area" id="timelineArea" hidden>
       <div class="timeline-header">
         <div class="timeline-title-row">
           <span class="timeline-title">Video Timeline</span>
@@ -232,11 +295,7 @@
           <div class="timeline-divider"></div>
           <button class="btn btn-small" id="btnBrightest">Find Brightest</button>
           <button class="btn btn-small" id="btnDarkest">Find Darkest</button>
-          <div class="timeline-divider"></div>
-          <label class="extract-fps-label">
-            Extract FPS: 
-            <input type="number" id="fpsExtract" class="fps-input" value="5" min="1" max="30">
-          </label>
+
         </div>
       </div>
       <div class="timeline-track" id="timelineTrack">
@@ -250,6 +309,24 @@
 
 <input type="file" id="pipeUpload" class="file-input-hidden" accept=".json,application/json" />
 <input type="file" id="projectUpload" class="file-input-hidden" accept=".meow,.zip,application/zip,application/x-zip-compressed" />
+
+
+<dialog class="help-dialog" id="helpDialog" aria-labelledby="helpDialogTitle">
+  <div class="help-dialog-content">
+    <header class="help-dialog-header">
+      <div>
+        <h2 id="helpDialogTitle">About Meow</h2>
+        <p>Visual image and video processing in your browser.</p>
+      </div>
+      <button class="btn" id="btnCloseHelpDialog" type="button">Close</button>
+    </header>
+    <div class="help-dialog-body">
+      <p>Meow lets you build image-processing pipelines, explore intermediate stages, experiment with independent branches, annotate images, compare results, and save complete workspaces as <code>.meow</code> projects.</p>
+      <p>Keep the project folder structure intact when using GitHub Pages. OpenCV.js and JSZip load from public CDNs, so an internet connection is needed when the editor starts.</p>
+      <p>For bugs or unfinished features, consult <code>TASKLIST.md</code> and <code>ROADMAP.md</code> in the project folder.</p>
+    </div>
+  </div>
+</dialog>
 
 <dialog class="comparison-dialog" id="comparisonDialog" aria-labelledby="comparisonDialogTitle">
   <div class="comparison-dialog-content">

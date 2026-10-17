@@ -5,10 +5,10 @@ Current status: started implementing .
 
 Project goals
 
-- [ ] distribute the js code.
-- [ ] Reduce UI clutter and give the image viewer more space.
-- [ ] Move secondary actions into clear top-level menus: File, Edit, View, Branches, Settings, and Help.
-- [ ] Hide video-specific controls and the Video Timeline when they are not relevant.
+- [X] distribute the js code.
+- [X] Reduce UI clutter and give the image viewer more space.
+- [X] Move secondary actions into clear top-level menus: File, Edit, View, Branches, Settings, and Help.
+- [X] Hide video-specific controls and the Video Timeline when they are not relevant.
 - [ ] Make branching a connected visual graph, similar to the GitHub Actions workflow example.
 - [ ] Ensure each branch forks from the selected branch and can be edited independently.
 - [ ] Make source-to-target merges understandable and safe.
@@ -19,7 +19,7 @@ Project goals
   Status: [ ] Not started
   Tasks
 - [ ] Back up the current working project before edits.
-- [ ] Record the current Git commit or create a backup branch, if Git is available.
+- [X] Record the current Git commit or create a backup branch, if Git is available.
 - [ ] Confirm the current HTML, CSS, and JavaScript entry points.
 - [ ] Open the editor and check the browser console for existing errors.
 - [ ] Smoke-test loading an image and a video.
@@ -42,7 +42,7 @@ Project goals
 - [ ] Close Media / New Workspace, if this can be added without losing unsaved work.
 - [ ] Add an unsaved-changes warning where appropriate before replacing or closing a project.
   Edit menu
-- [ ] Undo and Redo.
+- [X] Undo and Redo.
 - [ ] Delete selected pipeline step.
 - [ ] Clear pipeline, with confirmation if appropriate.
 - [ ] Annotation undo/redo.
@@ -52,7 +52,7 @@ Project goals
 - [ ] Disable commands when they cannot currently be used.
   View menu
 - [ ] Processed / Original / Side-by-side view.
-- [ ] Zoom in / Zoom out / Fit to View / reset zoom.
+- [X] Zoom in / Zoom out / Fit to View / reset zoom.
 - [ ] Show/hide Tools panel.
 - [ ] Show/hide Inspector and Statistics panels.
 - [ ] Show/hide Stage Previews.
@@ -151,7 +151,7 @@ Branch creation and independence
 - [ ] Click a node to select that branch for editing.
 - [ ] Create a child branch from the currently selected node.
 - [ ] Rename and delete branches from the graph or its contextual controls.
-- [ ] Add zoom, pan, and Fit to View.
+- [X] Add zoom, pan, and Fit to View.
 - [ ] Prevent graph dragging from accidentally selecting or editing the wrong branch.
 - [ ] Keep graph state synchronized with branch model state.
 - [ ] Provide an accessible list or keyboard navigation alternative where practical.
