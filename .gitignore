@@ -7,3 +7,4 @@ Thumbs.db
 # Do not commit generated test exports
 *.meow
 *.zip
+!assets/installer/*.zip

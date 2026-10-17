@@ -51,26 +51,26 @@
       <details class="menu-dropdown" id="fileMenu">
         <summary>File</summary>
         <div class="menu-panel" role="group" aria-label="File actions">
-          <button class="btn menu-item" id="btnOpenMediaMenu" type="button">📁 Open Media…</button>
+          <button class="btn menu-item" id="btnOpenMediaMenu" type="button">Open Media…</button>
           <div class="menu-separator"></div>
-          <button class="btn menu-item" id="btnLoadProject" type="button" title="Open a complete .meow project">📦 Open Project…</button>
-          <button class="btn menu-item" id="btnSaveProject" type="button" title="Save the media and workspace as a .meow project">💾 Save Project</button>
+          <button class="btn menu-item" id="btnLoadProject" type="button" title="Open a complete .meow project">Open Project…</button>
+          <button class="btn menu-item" id="btnSaveProject" type="button" title="Save the media and workspace as a .meow project">Save Project</button>
           <div class="menu-separator"></div>
-          <button class="btn menu-item" id="btnLoadPipe" type="button">📂 Load Pipeline…</button>
-          <button class="btn menu-item" id="btnSavePipe" type="button">💾 Save Pipeline…</button>
+          <button class="btn menu-item" id="btnLoadPipe" type="button">Load Pipeline…</button>
+          <button class="btn menu-item" id="btnSavePipe" type="button">Save Pipeline…</button>
           <div class="menu-separator"></div>
-          <button class="btn menu-item" id="btnSaveImg" type="button">⬇ Save Frame as PNG</button>
-          <button class="btn menu-item" id="btnExportAll" type="button" data-video-only hidden disabled>⬇ Export All Frames as ZIP</button>
+          <button class="btn menu-item" id="btnSaveImg" type="button">Save Frame as PNG</button>
+          <button class="btn menu-item" id="btnExportAll" type="button" data-video-only hidden disabled>Export All Frames as ZIP</button>
         </div>
       </details>
 
       <details class="menu-dropdown" id="editMenu">
         <summary>Edit</summary>
         <div class="menu-panel" role="group" aria-label="Edit actions">
-          <button class="btn menu-item" id="btnUndo" type="button" disabled>↺ Undo Pipeline</button>
-          <button class="btn menu-item" id="btnRedo" type="button" disabled>↻ Redo Pipeline</button>
+          <button class="btn menu-item" id="btnUndo" type="button" disabled>Undo Pipeline</button>
+          <button class="btn menu-item" id="btnRedo" type="button" disabled>Redo Pipeline</button>
           <div class="menu-separator"></div>
-          <button class="btn menu-item" id="btnClearPipe" type="button">🗑 Clear Pipeline</button>
+          <button class="btn menu-item" id="btnClearPipe" type="button">Clear Pipeline</button>
           <div class="menu-separator"></div>
           <div class="menu-section-label">Annotations</div>
           <button class="btn menu-item" id="btnUndoAnnotation" type="button" disabled>Undo Annotation</button>
@@ -168,6 +168,11 @@
           </div>
           <div class="menu-separator"></div>
           <button class="btn menu-item" id="btnResetPanels" type="button">Restore Default Panel Layout</button>
+          <div class="menu-separator"></div>
+          <div class="menu-setting-block">
+            <button class="btn menu-item" id="btnInstallMeowIcon" type="button">Install Meow File Icon for Windows</button>
+            <p>Configure .meow project files to display the custom Meow cat icon in File Explorer.</p>
+          </div>
         </div>
       </details>
 
@@ -189,12 +194,12 @@
       <div class="upload-panel">
         <div class="file-drop">
           <label for="mediaUpload">
-            <span class="upload-icon">📁</span> 
             Open Media (Image/Video)
           </label>
           <input type="file" id="mediaUpload" accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime" />
         </div>
       </div>
+
       <div class="tools-container" id="toolsContainer">
         <!-- Tools injected via JS -->
       </div>
@@ -397,7 +402,83 @@
 
 
 
+<dialog class="comparison-dialog" id="iconInstallerDialog" aria-labelledby="iconInstallerTitle">
+  <div class="comparison-dialog-content">
+    <header class="comparison-dialog-header">
+      <div>
+        <h2 id="iconInstallerTitle">Install Meow File Icon for Windows</h2>
+        <p>A one-time setup so downloaded <code>.meow</code> project files display the custom Meow cat icon in Windows File Explorer instead of the generic blank document icon.</p>
+      </div>
+      <button class="btn" id="btnCloseIconInstaller" type="button" aria-label="Close dialog">Close</button>
+    </header>
+
+    <div class="installer-info-box">
+      <div class="installer-icon-preview">
+        <img src="assets/icons/meow-thumbnail-transparent.png" alt="Meow Icon" width="56" height="56">
+        <div>
+          <strong>Custom .meow File Extension Icon</strong>
+          <span class="text-muted">Associates .meow project files with the official Meow cat icon in Windows Explorer.</span>
+        </div>
+      </div>
+      
+      <div class="installer-notice">
+        <strong>Windows-Specific One-Time Setup:</strong>
+        <p>Because web browsers run in a secure sandbox, downloading a file cannot alter operating system file icons directly. This lightweight installer configures the <code>.meow</code> file icon association on your Windows device.</p>
+      </div>
+
+      <div class="installer-steps">
+        <h3>Installation Instructions</h3>
+        <ol>
+          <li>Download the installer package (.zip) or the standalone script (.bat) below.</li>
+          <li>Run <code>install-meow-icon.bat</code>.</li>
+          <li>A confirmation screen will explain the setup. Type <strong>Y</strong> to confirm.</li>
+          <li>The script safely copies the icon locally to <code>%LOCALAPPDATA%\PurrfectCV</code>, registers the association, and refreshes Explorer.</li>
+        </ol>
+        <p class="installer-security-note"><strong>Safety &amp; Permissions:</strong> Runs per-user (<code>HKCU</code>). Does not require Administrator rights and will not touch any other file types. An uninstaller script is included to revert anytime.</p>
+      </div>
+
+      <div class="installer-commands-section">
+        <h3>Commands executed by the installer</h3>
+        <p class="installer-commands-desc">The installer executes the following standard Windows commands upon user confirmation:</p>
+        <pre class="installer-commands-code"><code>:: 1. Copy icon to local user directory
+mkdir "%LOCALAPPDATA%\PurrfectCV"
+copy /Y "meow-project.ico" "%LOCALAPPDATA%\PurrfectCV\meow-project.ico"
+
+:: 2. Register .meow file association in Windows Registry (HKCU)
+reg add "HKCU\Software\Classes\.meow" /ve /d "Meow.Project" /f
+reg add "HKCU\Software\Classes\.meow\OpenWithProgids" /v "Meow.Project" /t REG_SZ /d "" /f
+reg add "HKCU\Software\Classes\Meow.Project" /ve /d "Meow Project File" /f
+reg add "HKCU\Software\Classes\Meow.Project\DefaultIcon" /ve /d "%LOCALAPPDATA%\PurrfectCV\meow-project.ico,0" /f
+reg add "HKCU\Software\Classes\SystemFileAssociations\.meow\DefaultIcon" /ve /d "%LOCALAPPDATA%\PurrfectCV\meow-project.ico,0" /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.meow\OpenWithProgids" /v "Meow.Project" /t REG_SZ /d "" /f
+
+:: 3. Clear icon cache database and refresh Windows Explorer
+powershell -Command "[Shell]::SHChangeNotify(0x08000000, 0, [IntPtr]::Zero, [IntPtr]::Zero)"
+taskkill /f /im explorer.exe
+del /f /q "%LOCALAPPDATA%\IconCache.db"
+del /f /q "%LOCALAPPDATA%\Microsoft\Windows\Explorer\iconcache_*.db"
+start explorer.exe</code></pre>
+      </div>
+
+      <div class="installer-actions">
+        <a href="assets/installer/meow-windows-icon-installer.zip" download="meow-windows-icon-installer.zip" class="btn primary" id="btnDownloadInstallerZip">
+          Download Installer Package (.zip)
+        </a>
+        <a href="assets/installer/install-meow-icon.bat" download="install-meow-icon.bat" class="btn" id="btnDownloadInstallerBat">
+          Download Standalone Script (.bat)
+        </a>
+      </div>
+    </div>
+
+    <footer class="comparison-dialog-footer">
+      <span>Windows 10 &amp; 11 compatible • Standard per-user association</span>
+      <button class="btn" id="btnDoneIconInstaller" type="button">Done</button>
+    </footer>
+  </div>
+</dialog>
+
 <div id="msgBox">Message</div>
 
 </body>
 </html>
+
