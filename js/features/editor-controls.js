@@ -88,6 +88,7 @@ function refreshViewMenuLabels() {
 
 function syncMediaDependentUI({ resetTimeline = false } = {}) {
   if (resetTimeline) state.timelineCollapsed = false;
+  // Video-only controls remain hidden for images and until frame extraction marks video ready.
   const videoReady = state.mediaType === 'video' && state.mediaReady === true;
   document.querySelectorAll('[data-video-only]').forEach(element => { element.hidden = !videoReady; });
   const timeline = document.getElementById('timelineArea');

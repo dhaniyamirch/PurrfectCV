@@ -45,3 +45,116 @@
 }
 
 
+
+
+/* Issue 4 — make merge direction explicit in the branch controls. */
+.branch-merge-direction {
+  flex: 1 1 100%; min-width: 0; padding: 5px 8px; border: 1px solid #2d4560;
+  border-radius: 5px; background: #111d2b; color: #b9dbff; font-size: 11px;
+  line-height: 1.35; overflow-wrap: anywhere;
+}
+.branch-merge-direction:empty { display: none; }
+.branch-toolbar { flex-wrap: wrap; white-space: normal; overflow-x: visible; }
+.branch-merge-direction { white-space: normal; }
+
+/* Issue 5 — connected, scrollable branch timeline. */
+.branch-graph-area {
+  display: flex; flex-direction: column; gap: 6px; height: 194px; min-height: 150px;
+  padding: 7px 12px 8px; border-bottom: 1px solid var(--line); background: #0a0e13; flex: 0 0 auto;
+}
+.branch-graph-area[hidden] { display: none !important; }
+.branch-graph-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 18px; }
+.branch-graph-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.branch-graph-summary, .branch-graph-hint { color: var(--text-muted); font-size: 10px; }
+.branch-graph-hint { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.branch-graph-scroll { position: relative; flex: 1; min-height: 0; overflow: auto; border: 1px solid #222b35; border-radius: 7px; background: #080b10; }
+.branch-graph-canvas { position: relative; min-height: 80px; }
+.branch-graph-connectors { position: absolute; inset: 0 auto auto 0; pointer-events: none; overflow: visible; }
+.branch-graph-connector { fill: none; stroke: #3b5269; stroke-width: 2.5; opacity: .9; }
+.branch-graph-connector.active { stroke: #2f81f7; stroke-width: 3; }
+.branch-graph-connector-dot { fill: #0b1118; stroke: #5d7894; stroke-width: 2; }
+.branch-graph-row { position: absolute; left: 0; height: 76px; border-bottom: 1px solid rgba(48, 59, 72, .45); }
+.branch-graph-branch-label { position: absolute; left: 8px; top: 14px; width: 128px; min-height: 44px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; padding: 6px 8px; border: 1px solid #303b48; border-radius: 7px; background: #151c25; color: var(--text); text-align: left; overflow: hidden; }
+.branch-graph-branch-label.active { border-color: var(--accent); background: #13243a; box-shadow: 0 0 0 1px rgba(47,129,247,.15); }
+.branch-graph-branch-name { display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 700; }
+.branch-graph-branch-detail { display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); font-size: 9px; font-weight: 400; }
+.branch-graph-node { position: absolute; top: 5px; width: 126px; height: 66px; display: grid; grid-template-columns: 42px minmax(0, 1fr); grid-template-rows: 1fr 15px; gap: 1px 6px; padding: 4px; border: 1px solid #303b48; border-radius: 7px; background: #111820; color: var(--text); text-align: left; overflow: hidden; }
+.branch-graph-node:hover { border-color: #6286ad; background: #17212c; }
+.branch-graph-node.active { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(47,129,247,.2); }
+.branch-graph-node.inherited { opacity: .68; border-style: dashed; }
+.branch-graph-node-thumb { grid-row: 1 / 3; display: flex; align-items: center; justify-content: center; width: 42px; height: 54px; background: #05070a; border-radius: 4px; overflow: hidden; }
+.branch-graph-node-thumb img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.branch-graph-node-placeholder { padding: 3px; color: #718094; font-size: 7px; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
+.branch-graph-node-title { align-self: end; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 9px; line-height: 1.15; font-weight: 700; }
+.branch-graph-node-detail { align-self: start; color: var(--text-muted); font-size: 8px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.branch-graph-fork-note { position: absolute; top: 23px; color: #8fa1b5; font-size: 10px; font-style: italic; white-space: nowrap; }
+.branch-graph-empty { padding: 18px; color: var(--text-muted); font-size: 11px; }
+#btnToggleBranchGraph { flex-shrink: 0; }
+@media (max-width: 900px) {
+  .branch-graph-area { height: 184px; padding-left: 8px; padding-right: 8px; }
+  .branch-graph-hint { display: none; }
+}
+
+/* Issue 6 — configurable pixel-output merge controls. */
+.merge-option-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.merge-option-group[hidden] { display: none !important; }
+.merge-option-group select {
+  min-width: 82px;
+  max-width: 145px;
+}
+.merge-option-group input[type="range"] { width: 82px; accent-color: var(--accent); }
+#maskThresholdValue { min-width: 22px; color: var(--text); font-variant-numeric: tabular-nums; }
+@media (max-width: 900px) {
+  .blend-options { flex-wrap: wrap; }
+  .merge-option-group { white-space: normal; }
+}
+
+
+/* Issue 9 — free-position node workspace (Simulink-inspired). */
+.branch-graph-area { height: 430px; min-height: 300px; }
+.branch-graph-header { align-items: flex-start; flex-wrap: wrap; }
+.branch-graph-actions { display: flex; align-items: center; gap: 7px; min-width: 0; flex-wrap: wrap; justify-content: flex-end; }
+.branch-graph-hint { max-width: 520px; white-space: normal; line-height: 1.35; }
+.branch-graph-scroll { background-color: #080b10; background-image: radial-gradient(#27313d 1px, transparent 1px); background-size: 20px 20px; }
+.branch-graph-canvas { position: relative; min-width: 100%; min-height: 100%; isolation: isolate; }
+.node-workspace-wires { position: absolute; inset: 0 auto auto 0; overflow: visible; pointer-events: none; z-index: 1; }
+.node-workspace-wire { fill: none; stroke: #53677c; stroke-width: 2.5; opacity: .92; }
+.node-workspace-wire.active { stroke: #2f81f7; stroke-width: 3; }
+.node-workspace-wire.branch-fork { stroke: #37b978; stroke-dasharray: 7 5; }
+.node-workspace-wire.merge-wire { stroke: #bb8af7; stroke-width: 3; }
+.node-wire-port { fill: #0b1118; stroke: #7993ad; stroke-width: 2; }
+.node-workspace-node { position: absolute; z-index: 2; display: flex; flex-direction: column; overflow: visible; border: 1px solid #344353; border-radius: 9px; background: #111821; color: var(--text); box-shadow: 0 7px 18px rgba(0,0,0,.24); user-select: none; }
+.node-workspace-node.active { border-color: #2f81f7; box-shadow: 0 0 0 1px rgba(47,129,247,.2), 0 7px 18px rgba(0,0,0,.24); }
+.node-workspace-node.selected { border-color: #60a5fa; }
+.node-workspace-node.source-node { border-color: #4c718b; background: #101d28; }
+.node-workspace-node.branch-node { border-color: #3b8a68; background: #10221c; }
+.node-workspace-node.merge-node { border-color: #9566d8; background: #21172f; }
+.node-workspace-node-head { display: flex; align-items: center; gap: 7px; min-height: 30px; padding: 5px 7px; border-bottom: 1px solid rgba(255,255,255,.07); border-radius: 8px 8px 0 0; background: rgba(255,255,255,.035); }
+.node-workspace-drag-handle { cursor: grab; touch-action: none; }
+.node-workspace-drag-handle:active { cursor: grabbing; }
+.node-workspace-glyph { display: inline-flex; flex: 0 0 23px; width: 23px; height: 23px; align-items: center; justify-content: center; border-radius: 5px; background: #26384b; color: #b8d9ff; font-size: 10px; font-weight: 800; }
+.branch-node .node-workspace-glyph { background: #174a35; color: #a5f3c8; }
+.merge-node .node-workspace-glyph { background: #4c2d6d; color: #e5ceff; font-size: 15px; }
+.node-workspace-node-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 700; }
+.node-workspace-node-body { display: flex; align-items: center; justify-content: center; min-height: 34px; flex: 1; overflow: hidden; background: #080b10; }
+.node-workspace-node-body img { width: 100%; height: 100%; min-height: 30px; object-fit: contain; }
+.node-workspace-placeholder { padding: 5px 8px; color: #8493a5; font-size: 9px; line-height: 1.35; text-align: center; }
+.node-workspace-node-detail { min-height: 20px; padding: 4px 7px; color: #9aabba; font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.node-workspace-delete { border: 0; background: transparent; color: #95a4b6; cursor: pointer; font-size: 16px; line-height: 18px; padding: 0 2px; }
+.node-workspace-delete:hover { color: #ff8888; }
+.node-workspace-drop-target { outline: 2px dashed #2f81f7; outline-offset: -5px; }
+.tool-btn[draggable="true"] { cursor: grab; }
+.tool-btn.tool-dragging { opacity: .5; }
+@media (max-width: 900px) { .branch-graph-area { height: 360px; } .branch-graph-actions { justify-content: flex-start; } }
+.node-workspace-port { position: absolute; z-index: 4; top: calc(50% - 7px); width: 14px; height: 14px; padding: 0; border: 2px solid #7e9bb8; border-radius: 50%; background: #0b1118; cursor: crosshair; box-shadow: 0 0 0 2px #111821; }
+.node-workspace-port:hover, .node-workspace-port:focus-visible { border-color: #60a5fa; background: #2f81f7; outline: 2px solid rgba(96,165,250,.25); }
+.node-workspace-port.input-port { left: -8px; }
+.node-workspace-port.output-port { right: -8px; }
+.node-workspace-wire.wire-preview { stroke: #60a5fa; stroke-width: 3; stroke-dasharray: 6 5; opacity: 1; }

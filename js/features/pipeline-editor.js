@@ -17,6 +17,16 @@ function initTools() {
       const btn = document.createElement('button');
       btn.className = 'tool-btn';
       btn.textContent = def.name;
+      btn.dataset.operation = type;
+      btn.draggable = true;
+      btn.title = `${def.name} — click to add, or drag into the node workspace`;
+      btn.addEventListener('dragstart', event => {
+        event.dataTransfer.effectAllowed = 'copy';
+        event.dataTransfer.setData('application/x-purrfectcv-operation', type);
+        event.dataTransfer.setData('text/plain', type);
+        btn.classList.add('tool-dragging');
+      });
+      btn.addEventListener('dragend', () => btn.classList.remove('tool-dragging'));
       btn.onclick = () => addBlock(type);
       grid.appendChild(btn);
     }

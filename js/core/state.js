@@ -8,7 +8,7 @@ let cvReady = false;
 let state = {
   mediaType: null, mediaReady: false, timelineCollapsed: false, fileName: '', sourceMediaFile: null, sourceImage: null, videoEl: null, mediaObjectUrl: null, frames: [], currentFrameIndex: 0,
   pipeline: [], selectedBlockId: null,
-  branches: [], activeBranchId: null, outputBlend: null,
+  branches: [], activeBranchId: null, outputBlend: null, lastBranchMerge: null, mergeGraphPosition: null, branchStageSnapshots: {}, branchGraphVisible: null,
   viewMode: 'processed', zoomLevel: 1.0, panX: 0, panY: 0, splitPosition: 0.5,
   lastOrigData: null, lastProcData: null, fitOnNextRender: false, stagePreviews: [],
   activeStageKey: null, activeStageView: null, activeStageData: null,
@@ -36,6 +36,7 @@ const {
   MAX_BRANCHES,
   MAX_BRANCH_NAME_LENGTH,
   VALID_BLEND_MODES,
+  VALID_OUTPUT_MERGE_OPERATORS,
   OPERATIONS_CONFIG,
   OPERATIONS
 } = window.MeowConfig;

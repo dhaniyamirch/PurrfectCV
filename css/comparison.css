@@ -71,3 +71,32 @@
   .comparison-status { flex: 1 1 100%; order: 3; }
 }
 
+
+/* Issue 3 — keep the four comparison slots inside the main editor instead of a modal. */
+#comparisonWorkspaceView[hidden], #viewerContainer[hidden] { display: none !important; }
+.comparison-editor-toggle { flex: 0 0 auto; }
+.comparison-workspace-view {
+  flex: 1 1 auto; min-height: 0; min-width: 0; overflow: auto;
+  display: flex; flex-direction: column; gap: 10px; padding: 12px;
+  background: #090c10;
+}
+.comparison-inline-header { flex: 0 0 auto; padding-bottom: 8px; }
+.comparison-inline-header h2 { margin-bottom: 4px; }
+.comparison-workspace-view .comparison-grid {
+  flex: 1 1 auto; min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(140px, 1fr)); align-items: stretch;
+}
+.comparison-workspace-view .comparison-slot { min-height: 140px; }
+.comparison-workspace-view .comparison-slot-empty-card .comparison-slot-empty { min-height: 0; height: 100%; }
+.comparison-workspace-view .comparison-image-frame { min-height: 0; flex: 1 1 auto; }
+.comparison-workspace-view .comparison-image-frame img { max-height: 28vh; }
+.comparison-workspace-view .comparison-dialog-footer { flex: 0 0 auto; }
+.stage-preview-area .comparison-open-button { white-space: nowrap; }
+@media (max-width: 760px) {
+  .comparison-workspace-view { padding: 8px; }
+  .comparison-workspace-view .comparison-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .comparison-workspace-view .comparison-slot { min-height: 180px; }
+  .comparison-workspace-view .comparison-image-frame img { max-height: 26vh; }
+  .comparison-inline-header { align-items: flex-start; }
+  .comparison-workspace-view .comparison-dialog-footer { align-items: flex-start; flex-direction: column; }
+}

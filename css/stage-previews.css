@@ -34,3 +34,65 @@
 @media (max-width: 900px) { .stage-view-status { max-width: 150px; } }
 
 
+
+
+/* Issue 2 — make per-stage output thumbnails easier to inspect at a glance. */
+.stage-preview-area { height: 174px; min-height: 160px; gap: 7px; }
+.stage-preview-header { min-height: 22px; }
+.stage-preview-heading { min-width: 0; flex-wrap: wrap; }
+.stage-preview-branch {
+  display: inline-flex; align-items: center; max-width: 180px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; padding: 3px 7px; border-radius: 999px;
+  color: #b9dbff; background: #14253a; border: 1px solid #284b72; font-size: 10px;
+}
+.stage-preview-track { gap: 9px; }
+.stage-preview-card {
+  width: 224px; min-width: 224px; padding: 6px; gap: 4px;
+  display: grid; grid-template-columns: 1fr; grid-template-rows: 76px auto auto 24px;
+}
+.stage-preview-thumb { height: 76px; min-height: 76px; }
+.stage-preview-thumb img { object-fit: contain; }
+.stage-preview-thumb-fallback { color: var(--text-muted); font-size: 10px; }
+.stage-preview-meta { display: flex; align-items: center; min-width: 0; }
+.stage-preview-kind {
+  display: inline-flex; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 9px; line-height: 1.2; letter-spacing: .04em; font-weight: 700;
+  color: #9fb0c3; background: #171e27; border: 1px solid #303b48; border-radius: 4px; padding: 2px 5px;
+}
+.stage-preview-kind-source { color: #b9dbff; border-color: #284b72; background: #14253a; }
+.stage-preview-kind-step { color: #b9c7d7; }
+.stage-preview-kind-blend { color: #d7c2ff; border-color: #594080; background: #211832; }
+.stage-preview-label { font-size: 11px; min-width: 0; }
+.stage-preview-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; min-width: 0; }
+.stage-preview-actions .btn { min-width: 0; min-height: 24px; padding: 3px 5px; font-size: 10px; line-height: 1.1; }
+.stage-preview-open:disabled { cursor: default; }
+@media (max-height: 780px) {
+  .stage-preview-area { height: 160px; min-height: 150px; }
+  .stage-preview-card { grid-template-rows: 66px auto auto 23px; }
+  .stage-preview-thumb { height: 66px; min-height: 66px; }
+}
+@media (max-width: 900px) {
+  .stage-preview-branch { max-width: 120px; }
+  .stage-preview-area { height: 166px; min-height: 152px; }
+}
+
+
+/* Issue 3 follow-up — keep stage actions visible on short laptop viewports. */
+.stage-preview-area { height: 204px; min-height: 192px; }
+.stage-preview-area .stage-preview-track { min-height: 0; overflow-y: hidden; }
+.stage-preview-area .stage-preview-card {
+  flex: 0 0 224px; min-height: 0; height: 100%; overflow: visible;
+  grid-template-rows: 54px auto auto 26px; align-content: start; gap: 4px;
+}
+.stage-preview-area .stage-preview-thumb { height: 54px; min-height: 54px; }
+.stage-preview-area .stage-preview-meta,
+.stage-preview-area .stage-preview-label,
+.stage-preview-area .stage-preview-actions { min-height: 0; flex-shrink: 0; }
+.stage-preview-area .stage-preview-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.stage-preview-area .stage-preview-actions .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 26px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-height: 780px) {
+  .stage-preview-area { height: 204px; min-height: 192px; }
+  .stage-preview-area .stage-preview-card { grid-template-rows: 54px auto auto 26px; }
+  .stage-preview-area .stage-preview-thumb { height: 54px; min-height: 54px; }
+}
+@media (max-width: 900px) { .stage-preview-area { height: 204px; min-height: 192px; } }

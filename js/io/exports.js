@@ -99,8 +99,8 @@ async function exportAllFrames() {
       const sourceData = await readVideoFrameData(exportVideo, state.frames[i].time, signal, frameCanvas);
       const processedData = runPipelineOnImageData(sourceData, outputCanvas, pipelineSnapshot, false);
       if (outputBlendSnapshot && blendPipelineSnapshot) {
-        const sourceBranchData = runPipelineOnImageData(sourceData, blendBranchCanvas, blendPipelineSnapshot, false);
-        const combinedData = blendImageData(processedData, sourceBranchData, outputBlendSnapshot.mode, outputBlendSnapshot.opacity);
+        const sourceBranchData = runPipelineOnImageData(sourceData, blendBranchCanvas, blendPipelineSnapshot, false, null, outputBlendBranch.id);
+        const combinedData = mergeImageOutputs(processedData, sourceBranchData, outputBlendSnapshot);
         outputCanvas.width = combinedData.width; outputCanvas.height = combinedData.height;
         outputCanvas.getContext('2d', { willReadFrequently: true }).putImageData(combinedData, 0, 0);
       }

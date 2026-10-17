@@ -3,14 +3,14 @@
 .top-bar { height: 50px; border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 16px; background: var(--panel); gap: 12px; flex-shrink: 0; z-index: 50; }
 .top-bar h1 { font-size: 15px; color: #fff; margin-right: auto; }
 
-.main-area { display: flex; flex: 1; min-height: 0; overflow: hidden; }
-.side-panel { width: 300px; background: var(--panel); display: flex; flex-direction: column; border-right: 1px solid var(--line); flex-shrink: 0; overflow-y: hidden; z-index: 10; }
-.side-panel.right { border-right: none; border-left: 1px solid var(--line); width: 320px; overflow-y: auto; }
+.main-area { display: flex; flex: 1 1 auto; min-height: 280px; overflow: hidden; }
+.side-panel { width: clamp(220px, 18.2vw, 280px); min-width: 0; background: var(--panel); display: flex; flex-direction: column; border-right: 1px solid var(--line); flex: 0 0 clamp(220px, 18.2vw, 280px); overflow: hidden; z-index: 10; }
+.side-panel.right { border-right: none; border-left: 1px solid var(--line); width: clamp(240px, 19.5vw, 300px); flex-basis: clamp(240px, 19.5vw, 300px); overflow: hidden; }
 .center-area { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg); overflow: hidden; }
 .bottom-area { display: flex; flex-direction: column; border-top: 1px solid var(--line); background: var(--panel); flex-shrink: 0; }
 
-.viewer-toolbar { height: 44px; background: var(--panel); border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0; position: relative; z-index: 20; }
-.viewer-container { flex: 1; min-height: 0; min-width: 0; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; background: #090c10; z-index: 10; cursor: crosshair; }
+.viewer-toolbar { min-height: 44px; background: var(--panel); border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 12px; gap: 8px; flex: 0 0 44px; min-width: 0; overflow: hidden; position: relative; z-index: 20; }
+.viewer-container { flex: 1 1 auto; min-height: 0; min-width: 0; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; background: #090c10; z-index: 10; cursor: crosshair; }
 .canvas-wrapper { position: relative; display: flex; align-items: center; justify-content: center; overflow: visible; transform-origin: top left; }
 canvas#mainCanvas { max-width: none; max-height: none; box-shadow: 0 4px 24px rgba(0,0,0,0.4); border: 1px solid #30363d; background: #000; display: block; }
 .overlay-canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
@@ -25,6 +25,7 @@ canvas#mainCanvas { max-width: none; max-height: none; box-shadow: 0 4px 24px rg
 /* Compact zoom controls live in the image editor toolbar, not the global View menu. */
 .viewer-zoom-controls {
   display: inline-flex;
+  margin-left: auto;
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
@@ -54,4 +55,26 @@ canvas#mainCanvas { max-width: none; max-height: none; box-shadow: 0 4px 24px rg
   .viewer-zoom-controls .btn { padding: 4px 6px; }
   .viewer-zoom-controls .zoom-step-button { width: 26px; min-width: 26px; }
   .zoom-level-label { min-width: 34px; font-size: 10px; }
+}
+
+
+/* Main-editor layout milestone: preserve the canvas as the flexible focal area. */
+.center-area { flex: 1 1 0; min-height: 0; }
+.side-panel .upload-panel { flex: 0 0 auto; }
+.side-panel .tools-container { min-height: 0; }
+.side-panel.right { display: flex; flex-direction: column; }
+.inspector-panel { min-height: 120px; min-width: 0; overflow: auto; }
+.stats-panel { flex: 0 0 auto; min-width: 0; }
+.viewer-toolbar > .btn-group { flex: 0 0 auto; }
+.viewer-toolbar .pan-hint { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; }
+.viewer-zoom-controls { flex: 0 0 auto; }
+@media (max-width: 1050px) {
+  .side-panel { flex-basis: 245px; }
+  .side-panel.right { flex-basis: 265px; }
+  .viewer-toolbar { gap: 6px; padding: 0 8px; }
+}
+@media (max-width: 760px) {
+  .side-panel { flex-basis: 200px; }
+  .side-panel.right { flex-basis: 210px; }
+  .viewer-toolbar .btn-group .btn { padding: 5px 7px; font-size: 11px; }
 }

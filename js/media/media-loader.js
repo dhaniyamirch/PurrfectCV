@@ -347,8 +347,8 @@ async function readVideoFrameData(video, time, signal, canvas) {
 }
 
 function matToStageThumbnail(mat) {
-  const maxWidth = 172;
-  const maxHeight = 76;
+  const maxWidth = 240;
+  const maxHeight = 108;
   const scale = Math.min(1, maxWidth / mat.cols, maxHeight / mat.rows);
   const width = Math.max(1, Math.round(mat.cols * scale));
   const height = Math.max(1, Math.round(mat.rows * scale));
@@ -370,8 +370,8 @@ function matToStageThumbnail(mat) {
 }
 
 function imageDataToStageThumbnail(imageData) {
-  const maxWidth = 172;
-  const maxHeight = 76;
+  const maxWidth = 240;
+  const maxHeight = 108;
   const scale = Math.min(1, maxWidth / imageData.width, maxHeight / imageData.height);
   const width = Math.max(1, Math.round(imageData.width * scale));
   const height = Math.max(1, Math.round(imageData.height * scale));

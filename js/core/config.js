@@ -7,7 +7,7 @@
   'use strict';
 
   const MEOW_PROJECT_FORMAT = 'meow-project';
-  const MEOW_PROJECT_VERSION = 3;
+  const MEOW_PROJECT_VERSION = 4;
   const MAX_PROJECT_ANNOTATIONS = 5000;
   const MAX_ANNOTATION_POINTS_PER_MARK = 20000;
   const MAX_TOTAL_ANNOTATION_POINTS = 150000;
@@ -17,6 +17,7 @@
   const MAX_BRANCHES = 50;
   const MAX_BRANCH_NAME_LENGTH = 60;
   const VALID_BLEND_MODES = ['normal', 'multiply', 'screen', 'overlay', 'difference', 'darken', 'lighten'];
+  const VALID_OUTPUT_MERGE_OPERATORS = ['blend', 'add', 'bitwise-or', 'bitwise-and', 'bitwise-xor', 'masked-composite', 'choose-output'];
 
   // Architecture: Operation Dictionary utilizing OpenCV.js functions where possible
   const OPERATIONS_CONFIG = [
@@ -127,6 +128,7 @@
     MAX_BRANCHES,
     MAX_BRANCH_NAME_LENGTH,
     VALID_BLEND_MODES,
+    VALID_OUTPUT_MERGE_OPERATORS,
     OPERATIONS_CONFIG,
     OPERATIONS
   });

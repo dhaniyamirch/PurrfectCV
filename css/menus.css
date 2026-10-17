@@ -111,8 +111,8 @@
 .menu-setting-block .fps-input { width: 64px; }
 .menu-link { display: block; padding: 8px 9px; color: var(--text); font-size: 12px; text-decoration: none; border-radius: 5px; }
 .menu-link:hover { color: #fff; background: var(--panel-hover); }
-.side-panel { width: 280px; }
-.side-panel.right { width: 300px; }
+.side-panel { width: clamp(220px, 18.2vw, 280px); }
+.side-panel.right { width: clamp(240px, 19.5vw, 300px); }
 .status-text-inline { max-width: 190px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; flex-shrink: 1; }
 .annotation-panel-toggle { padding: 6px 9px; font-size: 11px; }
 .annotation-toolbar-panel { flex-shrink: 0; }

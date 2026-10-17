@@ -3,21 +3,25 @@
  * Shared globals are preserved during this behavior-preserving extraction.
  */
 function openComparisonWorkspace() {
-  const dialog = document.getElementById('comparisonDialog');
-  if (!dialog) return;
-  if (typeof dialog.showModal === 'function') {
-    if (!dialog.open) dialog.showModal();
-  } else {
-    dialog.setAttribute('open', '');
-  }
+  const view = document.getElementById('comparisonWorkspaceView');
+  const viewer = document.getElementById('viewerContainer');
+  const toggle = document.getElementById('btnToggleComparisonView');
+  if (!view || !viewer) return;
+  view.hidden = false;
+  viewer.hidden = true;
+  view.classList.add('comparison-workspace-active');
+  if (toggle) { toggle.classList.add('active'); toggle.setAttribute('aria-pressed', 'true'); }
   renderComparisonSlots();
 }
 
 function closeComparisonWorkspace() {
-  const dialog = document.getElementById('comparisonDialog');
-  if (!dialog) return;
-  if (typeof dialog.close === 'function' && dialog.open) dialog.close();
-  else dialog.removeAttribute('open');
+  const view = document.getElementById('comparisonWorkspaceView');
+  const viewer = document.getElementById('viewerContainer');
+  const toggle = document.getElementById('btnToggleComparisonView');
+  if (view) { view.hidden = true; view.classList.remove('comparison-workspace-active'); }
+  if (viewer) viewer.hidden = false;
+  if (toggle) { toggle.classList.remove('active'); toggle.setAttribute('aria-pressed', 'false'); }
+  if (typeof centerCanvasAtCurrentZoom === 'function') centerCanvasAtCurrentZoom();
 }
 
 function comparisonOccupiedCount() {
@@ -25,8 +29,8 @@ function comparisonOccupiedCount() {
 }
 
 function visibleComparisonSlotCount() {
-  const highestOccupied = state.comparisonSlots.reduce((last, slot, index) => slot ? index + 1 : last, 0);
-  return Math.max(1, highestOccupied, state.comparisonTargetSlot + 1);
+  // Keep all four slots visible in the main editor so users can discover the workspace.
+  return 4;
 }
 
 function clearComparisonSlot(slotIndex = state.comparisonTargetSlot) {
@@ -224,7 +228,7 @@ async function addStageToComparison(stageKey) {
         const blendData = runPipelineOnImageData(sourceData, sourceCanvas, blendPipeline, false, null, blendBranch.id);
         sourceCanvas.width = 1;
         sourceCanvas.height = 1;
-        imageData = blendImageData(baseData, blendData, blendSnapshot.mode, blendSnapshot.opacity);
+        imageData = mergeImageOutputs(baseData, blendData, blendSnapshot);
       } else {
         imageData = baseData;
       }
@@ -266,18 +270,25 @@ async function addStageToComparison(stageKey) {
       button.disabled = false;
       const selectedSlot = state.comparisonSlots[state.comparisonTargetSlot];
       button.textContent = selectedSlot ? `Replace slot ${state.comparisonTargetSlot + 1}` : `Add to slot ${state.comparisonTargetSlot + 1}`;
+      button.title = `${selectedSlot ? 'Replace' : 'Add'} this stage output in comparison slot ${state.comparisonTargetSlot + 1}. Choose another destination in the Comparison Workspace.`;
     }
   }
 }
 
 document.getElementById('btnOpenComparisonWorkspace').addEventListener('click', openComparisonWorkspace);
+document.getElementById('btnOpenComparisonFromMenu').addEventListener('click', () => {
+  openComparisonWorkspace();
+  document.getElementById('viewMenu')?.removeAttribute('open');
+});
+document.getElementById('btnToggleComparisonView').addEventListener('click', () => {
+  const view = document.getElementById('comparisonWorkspaceView');
+  if (view && !view.hidden) closeComparisonWorkspace();
+  else openComparisonWorkspace();
+});
 document.getElementById('btnCloseComparisonWorkspace').addEventListener('click', closeComparisonWorkspace);
 document.getElementById('btnDoneComparisonWorkspace').addEventListener('click', closeComparisonWorkspace);
 document.getElementById('btnClearComparisonSlot').addEventListener('click', () => clearComparisonSlot(state.comparisonTargetSlot));
 document.getElementById('comparisonTargetSlot').addEventListener('change', event => setComparisonTargetSlot(event.target.value));
-document.getElementById('comparisonDialog').addEventListener('click', event => {
-  if (event.target === event.currentTarget) closeComparisonWorkspace();
-});
 
 function currentDisplayedImageData() {
   return state.activeStageData || state.lastProcData;

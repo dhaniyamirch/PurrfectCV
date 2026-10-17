@@ -20,7 +20,7 @@ async function performProcess() {
   const blendBranch = activeBlend && state.branches.find(branch => branch.id === activeBlend.sourceBranchId);
   if (blendBranch) {
     const blendCanvas = document.createElement('canvas');
-    const blendData = runPipelineOnImageData(sourceData, blendCanvas, blendBranch.pipeline, false);
+    const blendData = runPipelineOnImageData(sourceData, blendCanvas, blendBranch.pipeline, false, null, blendBranch.id);
     state.lastProcData = applyOutputBlend(state.lastProcData, blendData, activeBlend, resultCanvas);
     generatedStages.push({
       key: `${state.activeBranchId}:blend:${blendBranch.id}`,
@@ -33,6 +33,10 @@ async function performProcess() {
     });
   }
   state.stagePreviews = generatedStages;
+  // Keep lightweight thumbnails per branch so the visual graph can show the last
+  // processed output for every branch without re-running inactive pipelines.
+  if (!state.branchStageSnapshots || typeof state.branchStageSnapshots !== 'object') state.branchStageSnapshots = {};
+  if (state.activeBranchId) state.branchStageSnapshots[state.activeBranchId] = generatedStages.map(stage => ({ ...stage }));
   let displayedData = state.lastProcData;
   let selectedStage = state.activeStageKey ? generatedStages.find(stage => stage.key === state.activeStageKey) : null;
 
@@ -77,6 +81,7 @@ async function performProcess() {
   }
   state.activeStageData = state.activeStageView ? displayedData : null;
   renderStagePreviewPanel();
+  renderBranchGraph();
   updateStageViewControls();
 
   const width = sourceData.width;

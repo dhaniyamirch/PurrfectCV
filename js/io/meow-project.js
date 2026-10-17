@@ -36,7 +36,7 @@ function buildMeowManifest() {
   return {
     format: MEOW_PROJECT_FORMAT,
     schemaVersion: MEOW_PROJECT_VERSION,
-    app: { name: 'Meow Visual Processing Editor', milestone: '6D-B' },
+    app: { name: 'Meow Visual Processing Editor', milestone: 'Issue 8 · Merge, timeline and project round-trip' },
     project: {
       name: safeBaseName(mediaFileName),
       savedAt: new Date().toISOString()
@@ -60,10 +60,23 @@ function buildMeowManifest() {
         parentId: branch.parentId || null,
         pipeline: clonePipeline(branch.pipeline),
         selectedBlockId: branch.selectedBlockId,
-        basePipeline: clonePipeline(branch.basePipeline || [])
+        basePipeline: clonePipeline(branch.basePipeline || []),
+        graphLayout: branch.graphLayout && typeof branch.graphLayout === 'object' ? { ...branch.graphLayout } : {}
       })),
       activeBranchId: state.activeBranchId,
       outputBlend: state.outputBlend ? { ...state.outputBlend } : null,
+      lastBranchMerge: state.lastBranchMerge ? { ...state.lastBranchMerge } : null,
+      mergeGraphPosition: state.mergeGraphPosition ? { ...state.mergeGraphPosition } : null,
+      branchGraphVisible: state.branchGraphVisible === true,
+      timelineCollapsed: state.timelineCollapsed === true,
+      comparisonTargetSlot: boundedNumber(state.comparisonTargetSlot, 0, 3, 0),
+      comparisonSlots: state.comparisonSlots.map((slot, index) => slot ? {
+        path: `workspace/comparison-slot-${index + 1}.png`, stageKey: String(slot.stageKey || ''),
+        label: String(slot.label || `Slot ${index + 1}`).slice(0, 160), width: boundedNumber(slot.width, 1, 100000, 1),
+        height: boundedNumber(slot.height, 1, 100000, 1), mediaType: slot.mediaType === 'video' ? 'video' : 'image',
+        frameIndex: Math.floor(boundedNumber(slot.frameIndex, 0, 1000000, 0)), branchId: String(slot.branchId || ''),
+        branchName: String(slot.branchName || 'Main').slice(0, 60)
+      } : null),
       currentFrameIndex: state.currentFrameIndex,
       currentFrameTime: currentFrame && Number.isFinite(currentFrame.time) ? currentFrame.time : 0,
       extractFps: boundedNumber(document.getElementById('fpsExtract').value, 1, 30, 5),
@@ -94,13 +107,22 @@ async function saveMeowProject() {
     const zip = new JSZip();
     zip.file('project.json', JSON.stringify(manifest, null, 2), { compression: 'DEFLATE', compressionOptions: { level: 3 } });
     zip.file(manifest.media.path, state.sourceMediaFile, { binary: true, compression: 'STORE' });
+    for (let index = 0; index < state.comparisonSlots.length; index++) {
+      const slot = state.comparisonSlots[index];
+      if (!slot) continue;
+      const response = await fetch(slot.objectUrl);
+      if (!response.ok) throw new Error(`Could not read comparison slot ${index + 1} while saving the project.`);
+      const imageBlob = await response.blob();
+      if (!imageBlob.size || imageBlob.size > MAX_MEOW_MEDIA_BYTES) throw new Error(`Comparison slot ${index + 1} has an invalid or oversized image.`);
+      zip.file(`workspace/comparison-slot-${index + 1}.png`, imageBlob, { binary: true, compression: 'STORE' });
+    }
     const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 3 } }, metadata => {
       setStatus(`Saving project… ${Math.round(metadata.percent)}%`);
     });
     if (blob.size > MAX_MEOW_ARCHIVE_BYTES) throw new Error('The saved project exceeds the 550 MiB archive limit. Use smaller source media.');
     downloadBlob(blob, `${manifest.project.name || 'meow_project'}.meow`);
     setStatus(`Saved project: ${manifest.project.name}.meow`);
-    showMsg(`Complete .meow project saved, including source media, branches, workspace settings, and ${manifest.workspace.annotations.length} annotation${manifest.workspace.annotations.length === 1 ? '' : 's'}.`);
+    showMsg(`Complete .meow project saved, including source media, branches, workspace settings, ${manifest.workspace.comparisonSlots.filter(Boolean).length} comparison slot${manifest.workspace.comparisonSlots.filter(Boolean).length === 1 ? '' : 's'}, and ${manifest.workspace.annotations.length} annotation${manifest.workspace.annotations.length === 1 ? '' : 's'}.`);
   } catch (error) {
     console.error('Project save failed:', error);
     showMsg(error.message || 'Could not save the .meow project.');
@@ -174,7 +196,7 @@ function validateProjectAnnotations(value, media) {
 function validateMeowManifest(manifest) {
   if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) throw new Error('The .meow manifest is not a valid object.');
   if (manifest.format !== MEOW_PROJECT_FORMAT) throw new Error('This file is not a Meow project archive.');
-  if (![1, 2, MEOW_PROJECT_VERSION].includes(manifest.schemaVersion)) throw new Error(`Unsupported .meow project version: ${String(manifest.schemaVersion)}.`);
+  if (![1, 2, 3, MEOW_PROJECT_VERSION].includes(manifest.schemaVersion)) throw new Error(`Unsupported .meow project version: ${String(manifest.schemaVersion)}.`);
   const media = manifest.media;
   if (!media || typeof media !== 'object' || Array.isArray(media)) throw new Error('The project is missing media information.');
   if (!['image', 'video'].includes(media.kind)) throw new Error('The project uses an unsupported media type.');
@@ -210,7 +232,8 @@ function validateMeowManifest(manifest) {
         parentId: typeof entry.parentId === 'string' && entry.parentId ? entry.parentId : null,
         pipeline: branchPipeline,
         selectedBlockId,
-        basePipeline
+        basePipeline,
+        graphLayout: entry.graphLayout && typeof entry.graphLayout === 'object' && !Array.isArray(entry.graphLayout) ? Object.fromEntries(Object.entries(entry.graphLayout).filter(([key, value]) => /^[a-zA-Z0-9:_-]{1,120}$/.test(key) && value && Number.isFinite(value.x) && Number.isFinite(value.y)).map(([key, value]) => [key, { x: Math.max(0, Math.min(20000, value.x)), y: Math.max(0, Math.min(20000, value.y)) }]).slice(0, 300)) : {}
       };
     });
     for (const branch of branches) {
@@ -226,12 +249,34 @@ function validateMeowManifest(manifest) {
     activeBranchId = typeof workspace.activeBranchId === 'string' && ids.has(workspace.activeBranchId) ? workspace.activeBranchId : branches[0].id;
     if (workspace.outputBlend !== null && workspace.outputBlend !== undefined) {
       const blend = workspace.outputBlend;
-      if (!blend || typeof blend !== 'object' || Array.isArray(blend) || !ids.has(blend.baseBranchId) || !ids.has(blend.sourceBranchId) || blend.baseBranchId === blend.sourceBranchId || !VALID_BLEND_MODES.includes(blend.mode)) {
-        throw new Error('The project output-blend settings are invalid.');
+      const operator = VALID_OUTPUT_MERGE_OPERATORS.includes(blend?.operator) ? blend.operator : 'blend';
+      if (!blend || typeof blend !== 'object' || Array.isArray(blend) || !ids.has(blend.baseBranchId) || !ids.has(blend.sourceBranchId) || blend.baseBranchId === blend.sourceBranchId || !VALID_BLEND_MODES.includes(blend.mode || 'normal')) {
+        throw new Error('The project output-merge settings are invalid.');
       }
-      outputBlend = { baseBranchId: blend.baseBranchId, sourceBranchId: blend.sourceBranchId, mode: blend.mode, opacity: boundedNumber(blend.opacity, 0, 1, 0.5) };
+      outputBlend = {
+        baseBranchId: blend.baseBranchId, sourceBranchId: blend.sourceBranchId, operator,
+        mode: VALID_BLEND_MODES.includes(blend.mode) ? blend.mode : 'normal',
+        opacity: boundedNumber(blend.opacity, 0, 1, 0.5), threshold: boundedNumber(blend.threshold, 0, 255, 128),
+        outputChoice: blend.outputChoice === 'source' ? 'source' : 'target'
+      };
     }
   }
+  const comparisonTargetSlot = Math.floor(boundedNumber(workspace.comparisonTargetSlot, 0, 3, 0));
+  const comparisonSlots = Array.from({ length: 4 }, (_, index) => {
+    const entry = Array.isArray(workspace.comparisonSlots) ? workspace.comparisonSlots[index] : null;
+    if (entry === null || entry === undefined) return null;
+    const expectedPath = `workspace/comparison-slot-${index + 1}.png`;
+    if (!entry || typeof entry !== 'object' || entry.path !== expectedPath) throw new Error(`Comparison slot ${index + 1} metadata is invalid.`);
+    // Comparison snapshots remain valid even if their original branch was later deleted.
+    return {
+      path: expectedPath, stageKey: typeof entry.stageKey === 'string' ? entry.stageKey.slice(0, 200) : '',
+      label: typeof entry.label === 'string' ? entry.label.slice(0, 160) : `Slot ${index + 1}`,
+      width: boundedNumber(entry.width, 1, 100000, 1), height: boundedNumber(entry.height, 1, 100000, 1),
+      mediaType: entry.mediaType === 'video' ? 'video' : 'image', frameIndex: Math.floor(boundedNumber(entry.frameIndex, 0, 1000000, 0)),
+      branchId: typeof entry.branchId === 'string' ? entry.branchId.slice(0, 100) : '',
+      branchName: typeof entry.branchName === 'string' ? entry.branchName.slice(0, 60) : 'Main'
+    };
+  });
   // Version 3 stores annotations. Versions 1 and 2 remain readable and migrate to no marks.
   const annotations = manifest.schemaVersion >= 3
     ? validateProjectAnnotations(workspace.annotations, media)
@@ -257,6 +302,10 @@ function validateMeowManifest(manifest) {
       branches,
       activeBranchId,
       outputBlend,
+      branchGraphVisible: workspace.branchGraphVisible === true,
+      timelineCollapsed: workspace.timelineCollapsed === true,
+      comparisonTargetSlot,
+      comparisonSlots,
       currentFrameIndex: frameIndex,
       currentFrameTime: frameTime,
       extractFps: boundedNumber(workspace.extractFps, 1, 30, 5),
@@ -323,6 +372,30 @@ async function readMeowArchive(file) {
   } catch (_) {
     throw new Error('This browser cannot recreate the embedded source file. Try a recent version of Chrome, Firefox, or Edge.');
   }
+  const restoredObjectUrls = [];
+  const slotEntries = validated.workspace.comparisonSlots.map((slot, index) => {
+    if (!slot) return null;
+    const entry = archive.file(slot.path);
+    if (!entry || entry.dir) throw new Error(`The project is missing comparison slot ${index + 1}'s image.`);
+    return entry;
+  });
+  const restoredSlots = validated.workspace.comparisonSlots.map((slot, index) => {
+    if (!slot) return Promise.resolve(null);
+    const entry = slotEntries[index];
+    return entry.async('blob').then(blob => {
+      if (!blob.size) throw new Error(`Comparison slot ${index + 1} contains an empty image.`);
+      const pngBlob = new Blob([blob], { type: 'image/png' });
+      const objectUrl = URL.createObjectURL(pngBlob);
+      restoredObjectUrls.push(objectUrl);
+      return { ...slot, objectUrl };
+    });
+  });
+  try {
+    validated.workspace.comparisonSlots = await Promise.all(restoredSlots);
+  } catch (error) {
+    restoredObjectUrls.forEach(objectUrl => URL.revokeObjectURL(objectUrl));
+    throw error;
+  }
   return { ...validated, mediaFile };
 }
 
@@ -348,9 +421,11 @@ async function openMeowProject(file) {
   openButton.disabled = true;
   saveButton.disabled = true;
   let prepared = null;
+  let project = null;
+  let comparisonSlotsAdopted = false;
   try {
     setStatus('Validating .meow project…');
-    const project = await readMeowArchive(file);
+    project = await readMeowArchive(file);
     // Decode the embedded media before replacing the current project, so a damaged or unsupported
     // source file does not discard the workspace that is already open.
     prepared = await prepareProjectMedia(project.mediaFile, project.media.kind);
@@ -374,9 +449,18 @@ async function openMeowProject(file) {
     state.annotationMode = false;
     state.fileName = project.media.fileName;
     state.sourceMediaFile = project.mediaFile;
-    state.branches = project.workspace.branches.map(branch => ({ ...branch, pipeline: clonePipeline(branch.pipeline), basePipeline: clonePipeline(branch.basePipeline || []), historyPast: [], historyFuture: [] }));
+    state.branches = project.workspace.branches.map(branch => ({ ...branch, pipeline: clonePipeline(branch.pipeline), basePipeline: clonePipeline(branch.basePipeline || []), graphLayout: branch.graphLayout && typeof branch.graphLayout === 'object' ? { ...branch.graphLayout } : {}, historyPast: [], historyFuture: [] }));
+    state.branchStageSnapshots = {};
+    state.branchGraphVisible = null;
     state.activeBranchId = project.workspace.activeBranchId;
     state.outputBlend = project.workspace.outputBlend ? { ...project.workspace.outputBlend } : null;
+    state.lastBranchMerge = project.workspace.lastBranchMerge ? { ...project.workspace.lastBranchMerge } : null;
+    state.mergeGraphPosition = project.workspace.mergeGraphPosition && Number.isFinite(project.workspace.mergeGraphPosition.x) && Number.isFinite(project.workspace.mergeGraphPosition.y) ? { x: project.workspace.mergeGraphPosition.x, y: project.workspace.mergeGraphPosition.y } : null;
+    state.comparisonSlots.forEach(slot => { if (slot?.objectUrl) URL.revokeObjectURL(slot.objectUrl); });
+    state.comparisonSlots = project.workspace.comparisonSlots.map(slot => slot ? { ...slot } : null);
+    comparisonSlotsAdopted = true;
+    state.comparisonTargetSlot = project.workspace.comparisonTargetSlot;
+    state.branchGraphVisible = project.workspace.branchGraphVisible;
     const activeProjectBranch = state.branches.find(branch => branch.id === state.activeBranchId) || state.branches[0];
     state.activeBranchId = activeProjectBranch.id;
     state.pipeline = clonePipeline(activeProjectBranch.pipeline);
@@ -405,23 +489,26 @@ async function openMeowProject(file) {
     updateUndoRedoUI();
     applyProjectViewSettings(project.workspace);
     if (state.outputBlend) {
-      document.getElementById('mergeStrategySelect').value = 'blend';
-      document.getElementById('blendModeSelect').value = state.outputBlend.mode;
+      document.getElementById('mergeStrategySelect').value = state.outputBlend.operator || 'blend';
+      document.getElementById('blendModeSelect').value = state.outputBlend.mode || 'normal';
       document.getElementById('blendOpacityInput').value = String(Math.round(state.outputBlend.opacity * 100));
+      document.getElementById('maskThresholdInput').value = String(state.outputBlend.threshold ?? 128);
+      document.getElementById('chooseOutputSelect').value = state.outputBlend.outputChoice || 'target';
     } else {
       document.getElementById('mergeStrategySelect').value = 'auto';
     }
+    state.timelineCollapsed = project.workspace.timelineCollapsed === true;
     renderPipelineUI();
 
     if (state.mediaType === 'image') {
       document.getElementById('btnExportAll').disabled = true;
-      syncMediaDependentUI({ resetTimeline: true });
+      syncMediaDependentUI();
       setStatus(`Project image: ${state.sourceImage.naturalWidth}×${state.sourceImage.naturalHeight}`);
       renderTimeline();
       requestProcess();
     } else {
       document.getElementById('btnExportAll').disabled = true;
-      syncMediaDependentUI({ resetTimeline: true });
+      syncMediaDependentUI();
       setStatus(`Project video: ${state.videoEl.videoWidth}×${state.videoEl.videoHeight}, ${state.videoEl.duration.toFixed(2)}s`);
       await extractFrames(extractionAbort.signal, token);
       if (token !== mediaLoadId) return;
@@ -441,10 +528,13 @@ async function openMeowProject(file) {
       await requestProcess();
     }
     renderBranchUI();
+    renderComparisonSlots();
+    renderStagePreviewPanel();
     renderAnnotationOverlay();
     updateAnnotationControls();
     showMsg(`Opened ${safeBaseName(project.media.fileName)}.meow successfully (${state.branches.length} branch${state.branches.length === 1 ? '' : 'es'}; ${state.annotations.length} annotation${state.annotations.length === 1 ? '' : 's'} restored).`);
   } catch (error) {
+    if (project && !comparisonSlotsAdopted) project.workspace.comparisonSlots.forEach(slot => { if (slot?.objectUrl) URL.revokeObjectURL(slot.objectUrl); });
     console.error('Project open failed:', error);
     showMsg(error.message || 'Could not open this .meow project.');
     setStatus('Project could not be opened.');

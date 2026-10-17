@@ -6,11 +6,17 @@ Current status: started implementing .
 Project goals
 
 - [X] distribute the js code.
+- [ ] generate python code for the process
+- [ ] video controlls frame selct for annotaion or to proccess
 - [X] Reduce UI clutter and give the image viewer more space.
 - [X] Move secondary actions into clear top-level menus: File, Edit, View, Branches, Settings, and Help.
 - [X] Hide video-specific controls and the Video Timeline when they are not relevant.
 - [ ] Make branching a connected visual graph, similar to the GitHub Actions workflow example.
 - [ ] Ensure each branch forks from the selected branch and can be edited independently.
+- [ ] Decide which panel visibility settings are session-only and which should be savedBranches menu
+- [ ] Open Branch Workspace.
+- [ ] Create branch from currently selected branch.
+- [ ] Rename and delete branch.
 - [ ] Make source-to-target merges understandable and safe.
 - [ ] Improve stage previews and the four-slot comparison workspace.
 - [ ] Give Meow a consistent logo, favicon, and application identity.
@@ -26,7 +32,6 @@ Project goals
 - [ ] Smoke-test one processing operation, undo/redo, pipeline save/load, and .meow save/open.
 - [ ] Record existing bugs so they are not mistaken for regressions introduced later.
   Acceptance checks
-- [ ] A known-good backup exists.
 - [ ] The baseline behavior and known errors are recorded.
   Milestone 1 — Navigation and toolbar cleanup
   Status: [ ] Not started
@@ -58,12 +63,7 @@ Project goals
 - [ ] Show/hide Stage Previews.
 - [ ] Show/hide Video Timeline.
 - [ ] Open Comparison Workspace.
-- [ ] Switch between Image Editor and Branch Workspace.
-- [ ] Decide which panel visibility settings are session-only and which should be saved.
-  Branches menu
-- [ ] Open Branch Workspace.
-- [ ] Create branch from currently selected branch.
-- [ ] Rename and delete branch.
+- [ ]
 - [ ] Open merge controls with clearly identified source and target.
 - [ ] Show merge-conflict status and guidance.
   Settings and Help
@@ -112,6 +112,30 @@ Project goals
   Milestone 4 — Correct the branch model and merge behavior
   Status: [ ] Not started
   Complete and test the underlying branch behavior before building the visual graph.
+
+- Switch between Image Editor and Branch Workspace.
+
+- [ ] Decide which panel visibility settings are session-only and which should be saved.
+  Branches menu
+- [ ] Open Branch Workspace.
+- [ ] Create branch from currently selected branch.
+- [ ] Rename and delete branch.
+
+- Switch between Image Editor and Branch Workspace.
+
+- [ ] Decide which panel visibility settings are session-only and which should be saved.
+  Branches menu
+- [ ] Open Branch Workspace.
+- [ ] Create branch from currently selected branch.
+- [ ] Rename and delete branch.
+
+- Switch between Image Editor and Branch Workspace.
+
+- [ ] Decide which panel visibility settings are session-only and which should be saved.
+  Branches menu
+- [ ] Open Branch Workspace.
+- [ ] Create branch from currently selected branch.
+- [ ] Rename and delete branch.
 
 Branch creation and independence
 
