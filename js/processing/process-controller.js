@@ -32,6 +32,17 @@ async function performProcess() {
       thumbnail: imageDataToStageThumbnail(state.lastProcData)
     });
   }
+  const downstreamMerge = state.lastBranchMerge && state.lastBranchMerge.targetBranchId === state.activeBranchId
+    ? (Array.isArray(state.lastBranchMerge.downstreamPipeline) ? state.lastBranchMerge.downstreamPipeline : []) : [];
+  if (downstreamMerge.length) {
+    const downstreamCanvas = document.createElement('canvas');
+    state.lastProcData = runPipelineOnImageData(state.lastProcData, downstreamCanvas, downstreamMerge, true, stage => {
+      if (stage.kind !== 'step') return;
+      generatedStages.push({ ...stage, key: `${state.activeBranchId}:postmerge:${stage.blockId}`, kind: 'post-merge-step', label: `After merge · ${stage.label}` });
+    }, state.activeBranchId);
+    resultCanvas.width = downstreamCanvas.width; resultCanvas.height = downstreamCanvas.height;
+    resultCanvas.getContext('2d', { willReadFrequently: true }).drawImage(downstreamCanvas, 0, 0);
+  }
   state.stagePreviews = generatedStages;
   // Keep lightweight thumbnails per branch so the visual graph can show the last
   // processed output for every branch without re-running inactive pipelines.
@@ -72,8 +83,8 @@ async function performProcess() {
         showMsg('That processing step was removed. Showing the final pipeline output.');
         displayedData = state.lastProcData;
       }
-    } else if (selectedStage.kind === 'blend') {
-      // lastProcData is already the blended result for this stage.
+    } else if (selectedStage.kind === 'blend' || selectedStage.kind === 'post-merge-step') {
+      // Merge and post-merge selections display the current merge pipeline output.
       displayedData = state.lastProcData;
     }
   } else {
