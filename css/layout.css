@@ -1,0 +1,23 @@
+
+.app-layout { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.top-bar { height: 50px; border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 16px; background: var(--panel); gap: 12px; flex-shrink: 0; z-index: 50; }
+.top-bar h1 { font-size: 15px; color: #fff; margin-right: auto; }
+
+.main-area { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+.side-panel { width: 300px; background: var(--panel); display: flex; flex-direction: column; border-right: 1px solid var(--line); flex-shrink: 0; overflow-y: hidden; z-index: 10; }
+.side-panel.right { border-right: none; border-left: 1px solid var(--line); width: 320px; overflow-y: auto; }
+.center-area { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg); overflow: hidden; }
+.bottom-area { display: flex; flex-direction: column; border-top: 1px solid var(--line); background: var(--panel); flex-shrink: 0; }
+
+.viewer-toolbar { height: 44px; background: var(--panel); border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0; position: relative; z-index: 20; }
+.viewer-container { flex: 1; min-height: 0; min-width: 0; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; background: #090c10; z-index: 10; cursor: crosshair; }
+.canvas-wrapper { position: relative; display: flex; align-items: center; justify-content: center; overflow: visible; transform-origin: top left; }
+canvas#mainCanvas { max-width: none; max-height: none; box-shadow: 0 4px 24px rgba(0,0,0,0.4); border: 1px solid #30363d; background: #000; display: block; }
+.overlay-canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+
+/* Split Handle */
+.split-handle { position: absolute; top: 0; bottom: 0; width: 4px; background: var(--accent); cursor: ew-resize; z-index: 30; margin-left: -2px; display: none; }
+.split-handle::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 16px; height: 16px; background: var(--accent); border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+
+.pipeline-area { border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 16px; gap: 16px; overflow-x: auto; height: 140px; background: #090c10; flex-shrink: 0; }
+.timeline-area { height: 130px; display: flex; flex-direction: column; padding: 8px 16px; overflow-x: auto; background: var(--panel); flex-shrink: 0; }

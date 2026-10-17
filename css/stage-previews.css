@@ -1,0 +1,36 @@
+/* Milestone 5A — non-interactive thumbnails for the source and each pipeline stage. */
+.stage-preview-area {
+  display: flex; flex-direction: column; gap: 6px; height: 122px; min-height: 108px;
+  padding: 7px 12px 8px; border-bottom: 1px solid var(--line); background: #0b0f14;
+  flex-shrink: 0; overflow: hidden;
+}
+.stage-preview-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 18px; flex-shrink: 0; }
+.stage-preview-heading { display: flex; align-items: center; gap: 10px; }
+.stage-preview-count { color: var(--text-muted); font-size: 10px; }
+.stage-preview-hint { color: var(--text-muted); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stage-preview-track { display: flex; align-items: stretch; gap: 8px; overflow-x: auto; overflow-y: hidden; min-height: 0; flex: 1; padding-bottom: 3px; }
+.stage-preview-empty { display: flex; align-items: center; padding: 8px; font-size: 11px; color: var(--text-muted); font-style: italic; }
+.stage-preview-card { display: flex; flex-direction: column; gap: 5px; width: 180px; min-width: 180px; min-height: 0; padding: 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+.stage-preview-thumb { display: flex; align-items: center; justify-content: center; height: 62px; background: #05070a; border-radius: 4px; overflow: hidden; }
+.stage-preview-thumb img { display: block; max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; }
+.stage-preview-label { font-size: 10px; color: var(--text); font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.branch-toolbar { min-height: 44px; padding-top: 4px; padding-bottom: 4px; }
+.pipeline-area { height: 92px; padding-top: 6px; padding-bottom: 6px; }
+.timeline-area { height: 104px; padding-top: 6px; padding-bottom: 5px; }
+@media (max-width: 1100px) { .stage-preview-hint { display: none; } }
+@media (max-height: 780px) { .stage-preview-area { height: 112px; min-height: 104px; } .stage-preview-thumb { height: 52px; } .pipeline-area { height: 84px; } .timeline-area { height: 94px; } }
+
+
+/* Milestone 5B — open an intermediate stage in the main viewer without changing the pipeline. */
+.stage-view-status { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: #8ec5ff; background: #14253a; border: 1px solid #284b72; border-radius: 5px; padding: 5px 7px; }
+.stage-view-status[hidden], .stage-return-button[hidden] { display: none; }
+.stage-return-button { border-color: #315e8d; color: #b9dbff; }
+.stage-preview-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(47,129,247,.25); }
+.stage-preview-open { width: 100%; min-height: 22px; padding: 3px 5px; font-size: 10px; line-height: 1.15; }
+.stage-preview-open:disabled { border-color: #315e8d; color: #b9dbff; background: #14253a; opacity: 1; }
+.stage-preview-area { height: 145px; min-height: 138px; }
+.stage-preview-thumb { height: 48px; }
+@media (max-height: 780px) { .stage-preview-area { height: 134px; min-height: 126px; } .stage-preview-thumb { height: 42px; } }
+@media (max-width: 900px) { .stage-view-status { max-width: 150px; } }
+
+

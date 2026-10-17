@@ -6,9 +6,32 @@
   <meta name="theme-color" content="#0d1117">
   <meta name="description" content="Meow Visual Processing Editor — image processing, stage previews, branch pipelines, comparison, and image annotations.">
   <title>Meow — Visual Processing Editor</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="css/core.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/timeline-stats-feedback.css">
+  <link rel="stylesheet" href="css/branches.css">
+  <link rel="stylesheet" href="css/stage-previews.css">
+  <link rel="stylesheet" href="css/comparison.css">
+  <link rel="stylesheet" href="css/annotations.css">
   <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="window.__cvScriptLoaded = true; if (window.onOpenCvReady) window.onOpenCvReady();" onerror="window.__cvScriptFailed = true; if (window.onOpenCvScriptFailed) window.onOpenCvScriptFailed();" type="text/javascript"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script defer src="js/core/config.js"></script>
+  <script defer src="js/core/state.js"></script>
+  <script defer src="js/features/pipeline-editor.js"></script>
+  <script defer src="js/features/branches.js"></script>
+  <script defer src="js/media/media-loader.js"></script>
+  <script defer src="js/processing/pipeline-runner.js"></script>
+  <script defer src="js/features/stage-previews.js"></script>
+  <script defer src="js/features/comparison.js"></script>
+  <script defer src="js/processing/process-controller.js"></script>
+  <script defer src="js/processing/opencv-operations.js"></script>
+  <script defer src="js/features/annotations.js"></script>
+  <script defer src="js/features/viewer.js"></script>
+  <script defer src="js/features/editor-controls.js"></script>
+  <script defer src="js/io/exports.js"></script>
+  <script defer src="js/io/meow-project.js"></script>
+  <script defer src="js/io/pipeline-json.js"></script>
   <script defer src="js/app.js"></script>
 </head>
 <body>

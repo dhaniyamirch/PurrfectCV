@@ -1,0 +1,58 @@
+/* Timeline & Stats */
+.timeline-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; }
+.timeline-track { display: flex; gap: 4px; overflow-x: auto; flex: 1; padding-bottom: 4px; align-items: center; }
+.frame-thumb { width: 70px; height: 50px; padding: 0; color: inherit; flex-shrink: 0; border: 2px solid transparent; border-radius: 4px; background: #000; cursor: pointer; position: relative; overflow: hidden; }
+.frame-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.frame-thumb.active { border-color: var(--accent); }
+.frame-thumb .frame-idx { position: absolute; bottom: 2px; right: 2px; font-size: 9px; background: rgba(0,0,0,0.8); padding: 1px 3px; border-radius: 2px; color: #fff; }
+
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.stat-box { background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--line); text-align: center; }
+.stat-val { font-size: 14px; color: #fff; font-weight: 600; display: block; }
+.stat-lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; }
+canvas#histCanvas { width: 100%; height: 100px; background: #090c10; border: 1px solid var(--line); border-radius: 6px; margin-top: 8px; }
+
+.loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(9, 12, 16, 0.7); display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(2px); color: #fff; font-size: 14px; flex-direction: column; gap: 12px; }
+.loading-overlay.global { position: fixed; z-index: 9999; display: flex; background: var(--bg); }
+.spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#msgBox { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-50px); background: #1f2937; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; opacity: 0; transition: all 0.3s; z-index: 9999; border: 1px solid var(--line); }
+#msgBox.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+/* Static style attributes extracted during the HTML/CSS split. */
+.spinner-large { width: 50px; height: 50px; border-width: 4px; }
+.loading-title { font-size: 16px; margin-top: 16px; }
+.loading-subtitle { font-size: 12px; color: var(--text-muted); }
+.toolbar-separator { width: 1px; height: 20px; background: var(--line); margin: 0 8px; flex-shrink: 0; }
+.toolbar-spacer { flex: 1; }
+.status-text-inline { font-size: 12px; color: var(--text-muted); }
+.export-all-button { display: none; }
+.upload-panel { padding: 12px; border-bottom: 1px solid var(--line); }
+.upload-icon { display: block; font-size: 18px; margin-bottom: 4px; }
+.pan-hint { font-size: 11px; color: var(--text-muted); margin-right: 12px; }
+.inspector-panel { padding: 16px; border-bottom: 1px solid var(--line); flex: 1; }
+.panel-title-small { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 12px; }
+.inspector-empty { color: var(--text-muted); font-size: 12px; text-align: center; padding: 20px 0; line-height: 1.5; }
+.stats-panel { padding: 16px; }
+.stats-panel .panel-title-small { margin-bottom: 8px; }
+.timeline-title-row { display: flex; align-items: center; gap: 12px; }
+.timeline-title { font-weight: 600; }
+.timeline-status { color: var(--text-muted); font-size: 11px; }
+.timeline-controls { display: flex; gap: 8px; align-items: center; }
+.frame-counter { font-size: 11px; font-variant-numeric: tabular-nums; width: 60px; text-align: center; }
+.timeline-divider { border-left: 1px solid var(--line); height: 16px; margin: 0 4px; }
+.extract-fps-label { font-size: 11px; display: flex; align-items: center; gap: 6px; }
+.fps-input { width: 40px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 4px; padding: 4px; text-align: center; }
+.timeline-empty-message { color: var(--text-muted); font-size: 12px; align-self: center; padding-left: 8px; font-style: italic; }
+.file-input-hidden { display: none; }
+
+.cv-load-error-title { font-size: 16px; color: #fff; }
+.cv-load-error-subtitle { font-size: 12px; color: var(--text-muted); max-width: 360px; text-align: center; line-height: 1.6; }
+
+

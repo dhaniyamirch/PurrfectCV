@@ -1,0 +1,21 @@
+:root {
+  --bg: #0d1117;
+  --panel: #161b22;
+  --panel-hover: #1f262e;
+  --line: #30363d;
+  --text: #c9d1d9;
+  --text-muted: #8b949e;
+  --accent: #2f81f7;
+  --accent-hover: #3182ce;
+  --danger: #f85149;
+  --success: #238636;
+  --card: #21262d;
+  --btn-bg: #21262d;
+  --btn-border: #363b42;
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+h1, h2, h3 { margin: 0; font-weight: 600; }
+button, input, select { font: inherit; outline: none; }
+button { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }

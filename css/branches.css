@@ -1,0 +1,47 @@
+/* Branch management — kept compact so the editor remains usable on smaller screens. */
+.branch-toolbar {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.branch-field { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.branch-field label, .blend-opacity-label { font-size: 11px; color: var(--text-muted); }
+.branch-toolbar select, .branch-name-input {
+  min-width: 92px;
+  max-width: 190px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--btn-border);
+  border-radius: 5px;
+  padding: 6px 7px;
+  font-size: 11px;
+}
+.branch-name-input { width: 138px; }
+.branch-toolbar select:focus, .branch-name-input:focus { border-color: var(--accent); }
+.branch-toolbar .btn { padding: 5px 8px; font-size: 11px; }
+.branch-toolbar .danger-outline { border-color: #663b3b; color: #ff8a84; }
+.branch-toolbar .danger-outline:hover:not(:disabled) { border-color: var(--danger); background: #321b1b; }
+.branch-toolbar-divider { height: 23px; width: 1px; background: var(--line); margin: 0 3px; flex-shrink: 0; }
+.branch-toolbar-spacer { flex: 1; }
+.merge-strategy-select { min-width: 178px !important; }
+.blend-options { display: flex; align-items: center; gap: 6px; padding: 3px 7px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+.blend-options[hidden] { display: none; }
+.blend-options select { min-width: 74px; }
+.blend-options input[type="range"] { width: 72px; accent-color: var(--accent); }
+.blend-opacity-label { display: flex; gap: 4px; align-items: center; }
+.blend-opacity-label span { color: var(--text); font-variant-numeric: tabular-nums; }
+.branch-message { font-size: 10px; color: var(--text-muted); max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.pipeline-area { height: 125px; }
+@media (max-width: 900px) {
+  .branch-toolbar { min-height: 46px; padding-left: 8px; padding-right: 8px; }
+  .branch-message { display: none; }
+}
+
+

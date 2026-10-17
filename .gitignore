@@ -1,0 +1,9 @@
+# Local development files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# Do not commit generated test exports
+*.meow
+*.zip
