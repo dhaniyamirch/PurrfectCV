@@ -187,22 +187,23 @@ Branch creation and independence
 - [ ] Replace and clear individual slots without affecting other slots.
 - [ ] Confirm comparison results correspond to the selected stage and branch.
   Milestone 7 — Meow identity, favicon, and project-file icon strategy
-  Status: [ ] Not started
+  Status: [x] Completed
   Branding
-- [ ] Choose a consistent Meow logo/icon direction.
-- [ ] Create a browser favicon and suitable icon sizes for the page/mobile shortcuts.
-- [ ] Update the page title and metadata.
-- [ ] Add the logo to the application header without taking too much space.
-- [ ] Check that icons remain clear at small sizes and against the current theme.
+- [x] Choose a consistent Meow logo/icon direction.
+- [x] Create a browser favicon and suitable icon sizes for the page/mobile shortcuts.
+- [x] Update the page title and metadata.
+- [x] Add the logo to the application header without taking too much space.
+- [x] Check that icons remain clear at small sizes and against the current theme.
   .meow file icon
-- [ ] Decide whether Meow remains a browser-only editor, becomes an installable PWA, or gains a desktop wrapper.
-- [ ] Document that a favicon does not by itself set the .meow icon in Windows Explorer.
-- [ ] If an installed-app route is chosen, investigate supported file association/open-with behavior and the permissions/platform limitations.
-- [ ] Keep .meow as a portable project archive regardless of the optional file-association approach.
+- [x] Establish Meow PWA manifest with file_handlers association for .meow files and 256px file icon.
+- [x] Embed thumbnail.png directly into saved .meow project ZIP archives for OS/viewer thumbnail extraction.
+- [x] Document that a favicon does not by itself set the .meow icon in Windows Explorer without an OS registry handler.
+- [x] Provide downloadable Windows .meow file icon installer package (.zip & standalone .bat) and website modal for one-click setup on user machines.
+- [x] Keep .meow as a portable project archive regardless of the optional file-association approach.
   Acceptance checks
-- [ ] Page icon and header branding display correctly.
-- [ ] Branding assets are stored and referenced consistently.
-- [ ] File-icon expectations match the chosen deployment approach; no unsupported promise is made.
+- [x] Page icon and header branding display correctly.
+- [x] Branding assets are stored and referenced consistently.
+- [x] File-icon expectations match the chosen deployment approach; no unsupported promise is made.
   Milestone 8 — .meow projects, annotations, and export reliability
   Status: [ ] Not started
   Project round-trip checks

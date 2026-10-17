@@ -133,7 +133,7 @@ function renderPipelineUI() {
     header.innerHTML = `<span>${def.name}</span>`;
     
     const delBtn = document.createElement('button');
-    delBtn.className = 'pipe-block-del'; delBtn.innerHTML = '✕'; delBtn.title = 'Delete';
+    delBtn.className = 'pipe-block-del'; delBtn.innerHTML = '&times;'; delBtn.title = 'Delete';
     delBtn.onclick = (e) => { e.stopPropagation(); deleteBlock(block.id); };
     header.appendChild(delBtn);
     

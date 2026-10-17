@@ -39,7 +39,8 @@ function buildMeowManifest() {
     app: { name: 'Meow Visual Processing Editor', milestone: '6D-B' },
     project: {
       name: safeBaseName(mediaFileName),
-      savedAt: new Date().toISOString()
+      savedAt: new Date().toISOString(),
+      thumbnail: 'thumbnail.png'
     },
     media: {
       path: mediaPath,
@@ -94,6 +95,16 @@ async function saveMeowProject() {
     const zip = new JSZip();
     zip.file('project.json', JSON.stringify(manifest, null, 2), { compression: 'DEFLATE', compressionOptions: { level: 3 } });
     zip.file(manifest.media.path, state.sourceMediaFile, { binary: true, compression: 'STORE' });
+    try {
+      const thumbResp = await fetch('assets/icons/meow-thumbnail-transparent.png');
+      if (thumbResp.ok) {
+        const thumbBlob = await thumbResp.blob();
+        zip.file('thumbnail.png', thumbBlob, { binary: true });
+        zip.file('icon.png', thumbBlob, { binary: true });
+      }
+    } catch (_) {
+      // Safe fallback if assets cannot be fetched in offline or file protocol environments
+    }
     const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 3 } }, metadata => {
       setStatus(`Saving project… ${Math.round(metadata.percent)}%`);
     });
@@ -459,4 +470,33 @@ document.getElementById('projectUpload').addEventListener('change', event => {
   if (file) openMeowProject(file);
   else event.target.value = '';
 });
+
+// Windows File Icon Installer Dialog Handlers
+(function initIconInstallerModal() {
+  const dialog = document.getElementById('iconInstallerDialog');
+  if (!dialog) return;
+
+  function openDialog() {
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+  }
+
+  function closeDialog() {
+    if (typeof dialog.close === 'function') dialog.close();
+    else dialog.removeAttribute('open');
+  }
+
+  document.getElementById('btnInstallMeowIcon')?.addEventListener('click', openDialog);
+  document.getElementById('btnSideInstallIcon')?.addEventListener('click', openDialog);
+  document.getElementById('btnCloseIconInstaller')?.addEventListener('click', closeDialog);
+  document.getElementById('btnDoneIconInstaller')?.addEventListener('click', closeDialog);
+
+  // Close when clicking dialog backdrop
+  dialog.addEventListener('click', event => {
+    const rect = dialog.getBoundingClientRect();
+    if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) {
+      closeDialog();
+    }
+  });
+})();
 
