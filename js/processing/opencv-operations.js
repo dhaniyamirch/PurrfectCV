@@ -18,6 +18,14 @@ function processOpenCVBlock(src, type, params = {}) {
   const point = (x, y) => own(new cv.Point(x, y));
   const rect = (x, y, width, height) => own(new cv.Rect(x, y, width, height));
   const scalar = (...values) => own(new cv.Scalar(...values));
+  const copySourceAlpha = (source, output) => {
+    if (!source || !output || source.channels() !== 4 || output.channels() !== 4) return;
+    for (let r = 0; r < source.rows; r++) {
+      const sourceRow = source.ucharPtr(r);
+      const outputRow = output.ucharPtr(r);
+      for (let c = 0; c < source.cols; c++) outputRow[c * 4 + 3] = sourceRow[c * 4 + 3];
+    }
+  };
   let dst = mat();
   let completed = false;
 
@@ -76,6 +84,76 @@ function processOpenCVBlock(src, type, params = {}) {
       cv.GaussianBlur(src, blur, size(0, 0), 2);
       const amount = Math.max(0.1, Number(params.amount) || 1);
       cv.addWeighted(src, 1 + amount, blur, -amount, 0, dst);
+      copySourceAlpha(src, dst);
+    } else if (type === 'bilateralFilter') {
+      if (typeof cv.bilateralFilter !== 'function') throw new Error('Bilateral Filter is not available in this OpenCV.js build.');
+      const rgb = mat();
+      const filtered = mat();
+      cv.cvtColor(src, rgb, cv.COLOR_RGBA2RGB);
+      const diameter = Math.max(1, Number(params.diameter) || 9) | 1;
+      cv.bilateralFilter(rgb, filtered, diameter, Number(params.sigmaColor) || 75, Number(params.sigmaSpace) || 75, cv.BORDER_DEFAULT);
+      cv.cvtColor(filtered, dst, cv.COLOR_RGB2RGBA);
+      copySourceAlpha(src, dst);
+    } else if (type === 'boxBlur') {
+      const kernel = Math.max(1, Number(params.kernel) || 5) | 1;
+      cv.blur(src, dst, size(kernel, kernel), point(-1, -1), cv.BORDER_DEFAULT);
+      copySourceAlpha(src, dst);
+    } else if (type === 'nonLocalMeans') {
+      const rgb = mat();
+      const denoised = mat();
+      cv.cvtColor(src, rgb, cv.COLOR_RGBA2RGB);
+      const h = Math.max(1, Number(params.h) || 10);
+      const hColor = Math.max(1, Number(params.hColor) || 10);
+      const templateWindowSize = Math.max(3, Number(params.templateWindowSize) || 7) | 1;
+      const searchWindowSize = Math.max(templateWindowSize, Number(params.searchWindowSize) || 21) | 1;
+      if (typeof cv.fastNlMeansDenoisingColored === 'function') {
+        cv.fastNlMeansDenoisingColored(rgb, denoised, h, hColor, templateWindowSize, searchWindowSize);
+      } else if (typeof cv.fastNlMeansDenoising === 'function') {
+        const gray = mat();
+        const cleanGray = mat();
+        cv.cvtColor(rgb, gray, cv.COLOR_RGB2GRAY);
+        cv.fastNlMeansDenoising(gray, cleanGray, h, templateWindowSize, searchWindowSize);
+        cv.cvtColor(cleanGray, denoised, cv.COLOR_GRAY2RGB);
+      } else {
+        throw new Error('Non-Local Means Denoising is not available in this OpenCV.js build.');
+      }
+      cv.cvtColor(denoised, dst, cv.COLOR_RGB2RGBA);
+      copySourceAlpha(src, dst);
+    } else if (type === 'unsharpMask') {
+      const blur = mat();
+      const radius = Math.max(0.1, Number(params.radius) || 2);
+      const amount = Math.max(0.1, Number(params.amount) || 1);
+      cv.GaussianBlur(src, blur, size(0, 0), radius, radius, cv.BORDER_DEFAULT);
+      cv.addWeighted(src, 1 + amount, blur, -amount, 0, dst);
+      copySourceAlpha(src, dst);
+    } else if (type === 'emboss') {
+      const kernel = mat();
+      kernel.create(3, 3, cv.CV_32FC1);
+      const strength = Number(params.strength) || 1;
+      const kernelValues = [-2, -1, 0, -1, 1, 1, 0, 1, 2];
+      for (let i = 0; i < kernelValues.length; i++) kernel.data32F[i] = kernelValues[i] * strength;
+      cv.filter2D(src, dst, -1, kernel, point(-1, -1), 128, cv.BORDER_DEFAULT);
+      copySourceAlpha(src, dst);
+    } else if (type === 'sepia') {
+      const intensity = Math.max(0, Math.min(1, Number(params.intensity ?? 100) / 100));
+      src.copyTo(dst);
+      for (let r = 0; r < src.rows; r++) {
+        const sourceRow = src.ucharPtr(r);
+        const outputRow = dst.ucharPtr(r);
+        for (let c = 0; c < src.cols; c++) {
+          const offset = c * 4;
+          const red = sourceRow[offset];
+          const green = sourceRow[offset + 1];
+          const blue = sourceRow[offset + 2];
+          const sepiaR = Math.min(255, 0.393 * red + 0.769 * green + 0.189 * blue);
+          const sepiaG = Math.min(255, 0.349 * red + 0.686 * green + 0.168 * blue);
+          const sepiaB = Math.min(255, 0.272 * red + 0.534 * green + 0.131 * blue);
+          outputRow[offset] = clamp(Math.round(red * (1 - intensity) + sepiaR * intensity));
+          outputRow[offset + 1] = clamp(Math.round(green * (1 - intensity) + sepiaG * intensity));
+          outputRow[offset + 2] = clamp(Math.round(blue * (1 - intensity) + sepiaB * intensity));
+          outputRow[offset + 3] = sourceRow[offset + 3];
+        }
+      }
     } else if (type === 'sobel') {
       const gray = mat();
       const gradient16 = mat();

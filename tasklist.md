@@ -11,13 +11,13 @@ Project goals
 - [X] Reduce UI clutter and give the image viewer more space.
 - [X] Move secondary actions into clear top-level menus: File, Edit, View, Branches, Settings, and Help.
 - [X] Hide video-specific controls and the Video Timeline when they are not relevant.
-- [ ] Make branching a connected visual graph, similar to the GitHub Actions workflow example.
-- [ ] Ensure each branch forks from the selected branch and can be edited independently.
-- [ ] Decide which panel visibility settings are session-only and which should be savedBranches menu
-- [ ] Open Branch Workspace.
-- [ ] Create branch from currently selected branch.
-- [ ] Rename and delete branch.
-- [ ] Make source-to-target merges understandable and safe.
+- [X] Make branching a connected visual graph, similar to the GitHub Actions workflow example.
+- [X] Ensure each branch forks from the selected branch and can be edited independently.
+- [X] Decide which panel visibility settings are session-only and which should be savedBranches menu
+- [X] Open Branch Workspace.
+- [X] Create branch from currently selected branch.
+- [X] Rename and delete branch.
+- [X] Make source-to-target merges understandable and safe.
 - [ ] Improve stage previews and the four-slot comparison workspace.
 - [ ] Give Meow a consistent logo, favicon, and application identity.
 - [ ] Verify .meow project persistence, annotation handling, export, and performance.
@@ -117,17 +117,17 @@ Project goals
 
 - [ ] Decide which panel visibility settings are session-only and which should be saved.
   Branches menu
-- [ ] Open Branch Workspace.
-- [ ] Create branch from currently selected branch.
-- [ ] Rename and delete branch.
+- [X] Open Branch Workspace.
+- [X] Create branch from currently selected branch.
+- [X] Rename and delete branch.
 
 - Switch between Image Editor and Branch Workspace.
 
-- [ ] Decide which panel visibility settings are session-only and which should be saved.
+- [X] Decide which panel visibility settings are session-only and which should be saved.
   Branches menu
-- [ ] Open Branch Workspace.
-- [ ] Create branch from currently selected branch.
-- [ ] Rename and delete branch.
+- [X] Open Branch Workspace.
+- [X] Create branch from currently selected branch.
+- [X] Rename and delete branch.
 
 - Switch between Image Editor and Branch Workspace.
 

@@ -57,6 +57,30 @@
         ]},
         sharpen: { name: 'Sharpen (Laplacian)', params: [
           { id: 'amount', label: 'Amount', type: 'range', min: 0.1, max: 5, step: 0.1, default: 1.0 }
+        ]},
+        bilateralFilter: { name: 'Bilateral Filter', params: [
+          { id: 'diameter', label: 'Neighborhood Diameter', type: 'range', min: 3, max: 15, step: 2, default: 9 },
+          { id: 'sigmaColor', label: 'Color Sigma', type: 'range', min: 10, max: 150, step: 5, default: 75 },
+          { id: 'sigmaSpace', label: 'Space Sigma', type: 'range', min: 10, max: 150, step: 5, default: 75 }
+        ]},
+        boxBlur: { name: 'Box Blur', params: [
+          { id: 'kernel', label: 'Kernel Size', type: 'range', min: 1, max: 31, step: 2, default: 5 }
+        ]},
+        nonLocalMeans: { name: 'Non-Local Means Denoising', params: [
+          { id: 'h', label: 'Luma Strength', type: 'range', min: 1, max: 30, step: 1, default: 10 },
+          { id: 'hColor', label: 'Color Strength', type: 'range', min: 1, max: 30, step: 1, default: 10 },
+          { id: 'templateWindowSize', label: 'Template Window', type: 'range', min: 3, max: 7, step: 2, default: 7 },
+          { id: 'searchWindowSize', label: 'Search Window', type: 'range', min: 7, max: 21, step: 2, default: 21 }
+        ]},
+        unsharpMask: { name: 'Unsharp Mask', params: [
+          { id: 'radius', label: 'Blur Radius', type: 'range', min: 1, max: 10, step: 0.5, default: 2 },
+          { id: 'amount', label: 'Amount', type: 'range', min: 0.1, max: 3, step: 0.1, default: 1.0 }
+        ]},
+        emboss: { name: 'Emboss', params: [
+          { id: 'strength', label: 'Strength', type: 'range', min: 0.5, max: 3, step: 0.1, default: 1 }
+        ]},
+        sepia: { name: 'Sepia', params: [
+          { id: 'intensity', label: 'Intensity', type: 'range', min: 0, max: 100, step: 5, default: 100 }
         ]}
       }
     },
